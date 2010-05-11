@@ -21,7 +21,7 @@ def parse_commit(line):
     rev = s[0]
     who = ' '.join(s[1:-5])
     date = '%s, %s %s %s %s +0000' % (s[-5], s[-3], s[-4], s[-1], s[-2])
-    #0,3,1,5,4
+
     return rev, who, date
 
 def format_commit_msg(msgs):
@@ -43,27 +43,6 @@ def parse_history():
         revisions.append((revision, committer, date, message))
 
     return revisions
-
-def parse_package_name(full_version):
-    '''Parse package name from a full version string'''
-    s = full_version.split("=", 1)[0]
-    if ":" in s: # this is a trove name, like 'pkg:source'
-        return s.split(":", 1)[0]
-    return s
-
-def checkout(trove, dest):
-    if not dest:
-        dest = parse_package_name(trove)
-    if os.path.isdir(dest) and os.listdir(dest):
-        print "Error: directory %s already exists and is not empty" % dest
-        sys.exit()
-
-    print "checking out %s to %s" % (trove, dest)
-    s = getstatusoutput("cvc checkout --dir=%s %s" % (dest, trove))
-    if s[0] != 0:
-        print "cvc co fails:", s[1]
-        sys.exit()
-    return dest
 
 def get_file_list():
     '''recognize the files in <package>:source'''
@@ -88,6 +67,29 @@ def commit_to_git(revisions):
                 % (author, date, msg))
         if s[0] != 0:
             print "error with git commit:", s[1]
+
+#######################################
+
+def parse_package_name(full_version):
+    '''Parse package name from a full version string'''
+    s = full_version.split("=", 1)[0]
+    if ":" in s: # this is a trove name, like 'pkg:source'
+        return s.split(":", 1)[0]
+    return s
+
+def checkout(trove, dest):
+    if not dest:
+        dest = parse_package_name(trove)
+    if os.path.isdir(dest) and os.listdir(dest):
+        print "Error: directory %s already exists and is not empty" % dest
+        sys.exit()
+
+    print "checking out %s to %s" % (trove, dest)
+    s = getstatusoutput("cvc checkout --dir=%s %s" % (dest, trove))
+    if s[0] != 0:
+        print "cvc co fails:", s[1]
+        sys.exit()
+    return dest
 
 def do_clone(trove, dest=None):
     workdir = checkout(trove, dest)
