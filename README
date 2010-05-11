@@ -1,20 +1,27 @@
-cvc2git
-
-A tool to pull a conary package:source into a git repository.
-
-That's the only function supported. No support for 'cvc update' for now.
+cvc2git - Use git to manage a conary package:source.
 
 Usage
 ------
-cvc2git.py <package-fullversion> [<directory>]
+cvc2git <comamnd> <options>
 
-    <package-fullversion>
-        Package name with label,  as returned by
-        '$ conary q --full-versions <pkg>:source'
+    Available commands are CLONE, PULL.
 
-    <directory>
-        The name of a new directory to clone into. If not specified, the
-        package name is used.
+    cvc2git clone <package-fullversion> [<directory>]
+
+        Pull a conary package into a new directory.
+
+        <package-fullversion>
+            Package name with label,  as returned by
+            '$ conary q --full-versions <pkg>:source'
+
+        <directory>
+            The name of a new directory to clone into. If not specified, the
+            package name is used.
+
+    cvc2git pull
+
+        Update a local clone to latest revision. This must be run from within a
+        existing repository (created from cvc2git clone)
 
 Implementation
 --------------
@@ -28,12 +35,12 @@ That's each and every revision. Plus the bad speed of cvc, so this is very slow.
 
 Example
 -------
-$ python cvc2git.py monodevelop=foresight.rpath.org@fl:2-devel
+$ python cvc2git monodevelop=foresight.rpath.org@fl:2-devel
 
 This will checkout monodevelop:source and put it in the ./monodevelop
 directory. It's a normal git repository and you can run normal git commands
 there.
 
-$ python cvc2git.py avr-binutils=/jesse.rpath.org@fl:2-devel test
+$ python cvc2git avr-binutils=/jesse.rpath.org@fl:2-devel test
 
 This will checkout avr-binutils from my personal repository into ./test.

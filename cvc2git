@@ -1,0 +1,17 @@
+#!/usr/bin/python
+
+import sys
+
+from clone import do_clone
+from clone import do_pull
+
+command_table = {
+        "clone": do_clone,
+        "pull": do_pull,
+        }
+
+def main():
+    command_table[sys.argv[1]](*sys.argv[2:])
+
+if __name__ == "__main__":
+    main()

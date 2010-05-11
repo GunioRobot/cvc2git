@@ -28,9 +28,9 @@ def format_commit_msg(msgs):
     ret = '\n'.join([x.strip() for x in msgs])
     return ret.rstrip()
 
-def parse_history(string):
+def parse_history():
     revisions = []
-    history = string.split("\n")
+    history = getoutput("cvc log").splitlines()
 
     # drop the first several lines
     i = find_next_commit(history, 0)
@@ -49,12 +49,14 @@ def checkout(trove, dest):
     extra = ("--dir=" + dest) if dest else ""
     s = getstatusoutput("cvc checkout %s %s" % (trove, extra))
     if s[0] == 0:
+        # TODO handle clone dummy-test:source=/jesse.rpath.org@fl:2-devel
         dir = dest if dest else trove.split("=")[0]
         return os.path.abspath(dir)
     print "cvc co fails:", s[1]
     return None
 
 def get_file_list():
+    '''recognize the files in <package>:source'''
     ls_result = getoutput("ls | /bin/grep -v CONARY").split()
     conary_config = open("CONARY").read()
     return [x for x in ls_result if x in conary_config]
@@ -77,13 +79,48 @@ def commit_to_git(revisions):
         if s[0] != 0:
             print "error with git commit:", s[1]
 
-def do_clone(trove, dest):
+def do_clone(trove, dest=None):
     workdir = checkout(trove, dest)
     if not workdir:
         sys.exit()
 
     # change to work directory
     os.chdir(workdir)
-    revisions = parse_history(getoutput("cvc log"))
+    revisions = parse_history()
 
     commit_to_git(revisions)
+    print "done"
+
+#######################################
+
+def read_local_version():
+    '''Read current version from CONARY'''
+    config = open("CONARY").readlines()
+    rev = config[2].strip().rsplit(":", 1)[1]
+    return rev
+
+def locate_rev_in_log(revisions, rev):
+    for i in range(len(revisions)):
+        if revisions[i][0] == rev:
+            return i
+    return None
+
+def do_pull():
+    current_rev = read_local_version()
+    print "local revision:", current_rev
+    s = getstatusoutput("cvc update")
+    if s[0] != 0:
+        print "error with cvc update:", s[1]
+        sys.exit()
+
+    remote_rev = read_local_version()
+    print "remote revision:", remote_rev
+
+    if current_rev == remote_rev:
+        print "no changes found"
+        return
+
+    revisions = parse_history()
+    ix = locate_rev_in_log(revisions, current_rev)
+    commit_to_git(revisions[:ix])
+    print "done"
