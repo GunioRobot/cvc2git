@@ -7,7 +7,10 @@ from clone import do_pull
 
 command_table = {
         "clone": do_clone,
+        "checkout": do_clone,
+        "co": do_clone,
         "pull": do_pull,
+        "update": do_pull,
         }
 
 def main():
