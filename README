@@ -4,15 +4,16 @@ Usage
 ------
 cvc2git <comamnd> <options>
 
-    Available commands are CLONE, PULL.
+Available commands are CLONE, PULL.
 
     cvc2git clone <package-fullversion> [<directory>]
 
         Pull a conary package into a new directory.
 
         <package-fullversion>
-            Package name with label,  as returned by
-            '$ conary q --full-versions <pkg>:source'
+            Package name with label, as returned by 'conary q --full-versions'.
+            Such as pkg=foresight.rpath.org@fl:2-devel or
+            pkg:source=foresight.rpath.org@fl:2-devel.
 
         <directory>
             The name of a new directory to clone into. If not specified, the
