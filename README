@@ -24,7 +24,7 @@ Basically, it works by checking out each revision of the package (cvc update
 <revision>), commit it to git (git add; git commit), checking out the next
 revision, on and on.
 
-Because of the bad speed of cvc, this is very slow.
+That's each and every revision. Plus the bad speed of cvc, so this is very slow.
 
 Example
 -------
