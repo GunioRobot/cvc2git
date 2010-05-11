@@ -9,10 +9,31 @@ Usage
 cvc2git.py <package-fullversion> [<directory>]
 
     <package-fullversion>
-        Package name with label,  as returned by '$ conary q --full-versions <pkg>:source'
+        Package name with label,  as returned by
+        '$ conary q --full-versions <pkg>:source'
 
     <directory>
-        The name of a new directory to clone into. If not specified, the package name is used.
+        The name of a new directory to clone into. If not specified, the
+        package name is used.
 
-------
+Implementation
+--------------
 Got quite stuck on the hg-cvc tool, so I started this very-poor-behaving one.
+
+Basically, it works by checking out each revision of the package (cvc update
+<revision>), commit it to git (git add; git commit), checking out the next
+revision, on and on.
+
+Because of the bad speed of cvc, this is very slow.
+
+Example
+-------
+$ python cvc2git.py monodevelop=foresight.rpath.org@fl:2-devel
+
+This will checkout monodevelop:source and put it in the ./monodevelop
+directory. It's a normal git repository and you can run normal git commands
+there.
+
+$ python cvc2git.py avr-binutils=/jesse.rpath.org@fl:2-devel test
+
+This will checkout avr-binutils from my personal repository into ./test.
