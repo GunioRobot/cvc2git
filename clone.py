@@ -51,9 +51,12 @@ def get_file_list():
     return [x for x in ls_result if x in conary_config]
 
 def commit_to_git(revisions):
-    print "converting to git..."
+    rev_count = len(revisions)
     getstatusoutput("git init")
-    for (revision, committer, date, message) in revisions[::-1]:
+    for (i, (revision, committer, date, message)) in enumerate(revisions[::-1]):
+        sys.stdout.write("converting to git...    [%d/%d] commits\r" % (i+1, rev_count))
+        sys.stdout.flush()
+
         author = committer.replace("(", "<", 1).replace(")", ">", 1)
         msg = "%s\n\ncvc revision: %s" % (message, revision)
         s = getstatusoutput("cvc update %s" % revision)
@@ -67,6 +70,7 @@ def commit_to_git(revisions):
                 % (author, date, msg))
         if s[0] != 0:
             print "error with git commit:", s[1]
+    print # needed, or the 'converting...' line will be overwritten
 
 #######################################
 
