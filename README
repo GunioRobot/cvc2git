@@ -1,0 +1,18 @@
+cvc2git
+
+A tool to pull a conary package:source into a git repository.
+
+That's the only function supported. No support for 'cvc update' for now.
+
+Usage
+------
+cvc2git.py <package-fullversion> [<directory>]
+
+    <package-fullversion>
+        Package name with label,  as returned by '$ conary q --full-versions <pkg>:source'
+
+    <directory>
+        The name of a new directory to clone into. If not specified, the package name is used.
+
+------
+Got quite stuck on the hg-cvc tool, so I started this very-poor-behaving one.
