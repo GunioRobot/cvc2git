@@ -19,10 +19,14 @@ Available commands are CLONE, PULL.
             The name of a new directory to clone into. If not specified, the
             package name is used.
 
+        Aliases: checkout, co
+
     cvc2git pull
 
         Update a local clone to latest revision. This must be run from within a
         existing repository (created from cvc2git clone)
+
+        Aliases: update
 
 Implementation
 --------------
