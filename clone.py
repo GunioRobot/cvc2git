@@ -64,9 +64,10 @@ def commit_to_git(revisions):
         if s[0] != 0:
             print "error with cvc update:", s[1]
         files = get_file_list()
-        s = getstatusoutput("git add %s" % " ".join(files))
-        if s[0] != 0:
-            print "error with git add:", s[1]
+        s = subprocess.call(["git", "add", " ".join(files)],
+                stdout=open('/dev/null', 'w'))
+        if s != 0:
+            print "error with git add, exiting"
         s = subprocess.call(["git", "commit",
             "--all",
             "--author", author,
