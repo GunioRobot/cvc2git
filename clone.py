@@ -3,6 +3,7 @@
 from commands import getoutput, getstatusoutput
 import os
 import sys
+import subprocess
 
 def start_with_version(line):
     return (len(line) > 0) and line[0].isdigit()
@@ -65,11 +66,12 @@ def commit_to_git(revisions):
         files = get_file_list()
         s = getstatusoutput("git add %s" % " ".join(files))
         if s[0] != 0:
-            print "error with git commit:", s[1]
-        s = getstatusoutput("git commit --all --author='%s' --date='%s' --message='%s'"
-                % (author, date, msg))
-        if s[0] != 0:
-            print "error with git commit:", s[1]
+            print "error with git add:", s[1]
+        subprocess.call(["git", "commit",
+            "--all",
+            "--author", author,
+            "--date", date,
+            "--message", msg])
     print # needed, or the 'converting...' line will be overwritten
 
 #######################################
