@@ -13,7 +13,21 @@ command_table = {
         "update": do_pull,
         }
 
+def usage():
+    print "Usage: %s <command> <options>"
+
+def check_argv():
+    if len(sys.argv) < 2:
+        usage()
+        sys.exit()
+
+    if sys.argv[1] not in command_table:
+        print "Error: unknow command %s" % sys.argv[1]
+        usage()
+        sys.exit()
+
 def main():
+    check_argv()
     command_table[sys.argv[1]](*sys.argv[2:])
 
 if __name__ == "__main__":
