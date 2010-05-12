@@ -95,6 +95,10 @@ def checkout(trove, dest):
         sys.exit()
     return dest
 
+def create_ignore_file():
+    '''ignore CONARY'''
+    open(".gitignore", "w").write("CONARY\n")
+
 def do_clone(trove, dest=None):
     workdir = checkout(trove, dest)
 
@@ -102,6 +106,7 @@ def do_clone(trove, dest=None):
     os.chdir(workdir)
     revisions = parse_history()
 
+    create_ignore_file()
     commit_to_git(revisions)
     print "done"
 
