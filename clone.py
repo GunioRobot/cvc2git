@@ -67,11 +67,15 @@ def commit_to_git(revisions):
         s = getstatusoutput("git add %s" % " ".join(files))
         if s[0] != 0:
             print "error with git add:", s[1]
-        subprocess.call(["git", "commit",
+        s = subprocess.call(["git", "commit",
             "--all",
             "--author", author,
             "--date", date,
-            "--message", msg])
+            "--message", msg],
+            stdout=open('/dev/null', 'w'))
+        if s != 0:
+            print "error with git commit, exiting"
+            sys.exit()
     print # needed, or the 'converting...' line will be overwritten
 
 #######################################
