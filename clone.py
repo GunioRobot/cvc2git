@@ -47,7 +47,7 @@ def parse_history():
 
 def get_file_list():
     '''recognize the files in <package>:source'''
-    ls_result = getoutput("ls | /bin/grep -v CONARY").split()
+    ls_result = getoutput("ls | /bin/grep -v CONARY").splitlines()
     conary_config = open("CONARY").read()
     return [x for x in ls_result if x in conary_config]
 
@@ -64,7 +64,7 @@ def commit_to_git(revisions):
         if s[0] != 0:
             print "error with cvc update:", s[1]
         files = get_file_list()
-        s = subprocess.call(["git", "add", " ".join(files)],
+        s = subprocess.call(["git", "add"] + files,
                 stdout=open('/dev/null', 'w'))
         if s != 0:
             print "error with git add, exiting"
