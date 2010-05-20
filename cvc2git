@@ -14,7 +14,7 @@ command_table = {
         }
 
 def usage():
-    print "Usage: %s <command> <options>"
+    print "Usage: cvc2git <command> <options>"
 
 def check_argv():
     if len(sys.argv) < 2:
