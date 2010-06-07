@@ -55,7 +55,8 @@ def commit_to_git(revisions):
     rev_count = len(revisions)
     getstatusoutput("git init")
     for (i, (revision, committer, date, message)) in enumerate(revisions[::-1]):
-        sys.stdout.write("converting to git...    [%d/%d] commits\r" % (i+1, rev_count))
+        sys.stdout.write("converting [%d/%d] commits to git...  revision=%s\r"
+                % (i+1, rev_count, revision))
         sys.stdout.flush()
 
         author = committer.replace("(", "<", 1).replace(")", ">", 1)
