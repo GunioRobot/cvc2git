@@ -1,51 +1,54 @@
-cvc2git - Use git to manage a conary package:source.
+cvc2git - Use git to manage conary package:source
 
 Usage
 ------
-cvc2git <comamnd> <options>
+cvc2git <command> [<options>]
 
-Available commands are CLONE, PULL.
+Available commands are clone, pull.
 
-    cvc2git clone <package-fullversion> [<directory>]
-
-        Pull a conary package into a new directory.
+    clone <package-fullversion> [<directory>]
+        Pull a conary package into a new directory.  Aliases: checkout, co
 
         <package-fullversion>
             Package name with label, as returned by 'conary q --full-versions'.
-            Such as pkg=foresight.rpath.org@fl:2-devel or
-            pkg:source=foresight.rpath.org@fl:2-devel.
-
+            Example: pkg=foresight.rpath.org@fl:2-devel or
+                     pkg:source=foresight.rpath.org@fl:2-devel.
         <directory>
             The name of a new directory to clone into. If not specified, the
             package name is used.
 
-        Aliases: checkout, co
-
-    cvc2git pull
-
-        Update a local clone to latest revision. This must be run from within a
-        existing repository (created from cvc2git clone)
-
-        Aliases: update
+    pull
+        Update a local clone to latest revision. This must be run from within
+        an existing repository (created with cvc2git clone).  Aliases: update
 
 Implementation
 --------------
 Got quite stuck on the hg-cvc tool, so I started this very-poor-behaving one.
 
-Basically, it works by checking out each revision of the package (cvc update
-<revision>), commit it to git (git add; git commit), checking out the next
-revision, on and on.
+About 'cvc2git clone':
+    * Checkout the source package (cvc co <package>)
+    * Get the package history (cvc log)
+    * Parse the history
+    * Init a git repository (git init)
+    * Check out the first revision of the package (cvc update <revision>)
+    * Commit the first revision to git (git add; git commit)
+    * Checking out the next revision, on and on.
 
-That's each and every revision. Plus the bad speed of cvc, so this is very slow.
+About 'cvc2git pull':
+    * Record the current local revision (from CONARY file)
+    * Update to the latest revision (cvc update)
+    * Convert the new revisions as done in 'cvc2git clone' (start from the
+        recorded revision, instead of the first one)
+
+You probably already realize from this simple implementation that, cvc2git is
+quite slow.
 
 Example
 -------
 $ python cvc2git monodevelop=foresight.rpath.org@fl:2-devel
 
-This will checkout monodevelop:source and put it in the ./monodevelop
-directory. It's a normal git repository and you can run normal git commands
-there.
+Checkout monodevelop:source and put it in the ./monodevelop directory.
 
 $ python cvc2git avr-binutils=/jesse.rpath.org@fl:2-devel test
 
-This will checkout avr-binutils from my personal repository into ./test.
+Checkout avr-binutils from my personal repository into ./test.
