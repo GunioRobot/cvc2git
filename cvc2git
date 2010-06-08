@@ -3,7 +3,7 @@
 import sys
 
 from clone import do_clone
-from clone import do_pull
+from pull import do_pull
 
 command_table = {
         "clone": do_clone,
