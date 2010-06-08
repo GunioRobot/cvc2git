@@ -3,20 +3,11 @@ import sys
 
 from utils import (
         commit_to_git,
+        create_ignore_file,
+        locate_rev_in_log,
         parse_history,
+        read_local_version,
         )
-
-def read_local_version():
-    '''Read current version from CONARY'''
-    config = open("CONARY").readlines()
-    rev = config[2].strip().rsplit(":", 1)[1]
-    return rev
-
-def locate_rev_in_log(revisions, rev):
-    for i in range(len(revisions)):
-        if revisions[i][0] == rev:
-            return i
-    return None
 
 def do_pull():
     current_rev = read_local_version()
@@ -37,3 +28,13 @@ def do_pull():
     ix = locate_rev_in_log(revisions, current_rev)
     commit_to_git(revisions[:ix])
     print "done"
+
+def in_place_convert():
+    # check if is cvc package dir
+    create_ignore_file()
+
+    revisions = parse_history()
+    current_rev = read_local_version()
+    ix = locate_rev_in_log(revisions, current_rev)
+
+    commit_to_git(revisions[ix:])

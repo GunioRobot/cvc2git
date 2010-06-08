@@ -4,10 +4,9 @@ import sys
 
 from utils import (
         commit_to_git,
+        create_ignore_file,
         parse_history,
         )
-
-from pull import read_local_version, locate_rev_in_log
 
 def parse_package_name(full_version):
     '''Parse package name from a full version string'''
@@ -30,10 +29,6 @@ def checkout(trove, dest):
         sys.exit()
     return dest
 
-def create_ignore_file():
-    '''ignore CONARY'''
-    open(".gitignore", "w").write("CONARY\n")
-
 def do_clone(trove, dest=None):
     workdir = checkout(trove, dest)
 
@@ -44,14 +39,3 @@ def do_clone(trove, dest=None):
     create_ignore_file()
     commit_to_git(revisions)
     print "done"
-
-################
-def in_place_convert():
-    # check if is cvc package dir
-    create_ignore_file()
-
-    revisions = parse_history()
-    current_rev = read_local_version()
-    ix = locate_rev_in_log(revisions, current_rev)
-
-    commit_to_git(revisions[ix:])

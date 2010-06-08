@@ -77,3 +77,19 @@ def commit_to_git(revisions):
             print "error with git commit, exiting"
             sys.exit()
     print # needed, or the 'converting...' line will be overwritten
+
+def read_local_version():
+    '''Read current version from CONARY'''
+    config = open("CONARY").readlines()
+    rev = config[2].strip().rsplit(":", 1)[1]
+    return rev
+
+def locate_rev_in_log(revisions, rev):
+    for i in range(len(revisions)):
+        if revisions[i][0] == rev:
+            return i
+    return None
+
+def create_ignore_file():
+    '''ignore CONARY'''
+    open(".gitignore", "w").write("CONARY\n")
