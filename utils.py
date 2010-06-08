@@ -27,6 +27,7 @@ def format_commit_msg(msgs):
     return ret.rstrip()
 
 def parse_history():
+    '''Revisions are returned with newest first'''
     revisions = []
     history = getoutput("cvc log").splitlines()
 

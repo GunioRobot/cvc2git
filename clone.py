@@ -7,6 +7,8 @@ from utils import (
         parse_history,
         )
 
+from pull import read_local_version, locate_rev_in_log
+
 def parse_package_name(full_version):
     '''Parse package name from a full version string'''
     s = full_version.split("=", 1)[0]
@@ -42,3 +44,14 @@ def do_clone(trove, dest=None):
     create_ignore_file()
     commit_to_git(revisions)
     print "done"
+
+################
+def in_place_convert():
+    # check if is cvc package dir
+    create_ignore_file()
+
+    revisions = parse_history()
+    current_rev = read_local_version()
+    ix = locate_rev_in_log(revisions, current_rev)
+
+    commit_to_git(revisions[ix:])
