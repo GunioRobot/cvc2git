@@ -4,6 +4,7 @@ import sys
 from utils import (
         commit_to_git,
         create_ignore_file,
+        is_conary_package_dir,
         locate_rev_in_log,
         parse_history,
         read_local_version,
@@ -22,7 +23,10 @@ def do_pull():
     print "done"
 
 def convert_in_place():
-    # check if is cvc package dir
+    if not is_conary_package_dir():
+        print "Error: current directoy must contain a conary source package, as created by cvc checkout"
+        return
+
     create_ignore_file()
 
     revisions = parse_history()

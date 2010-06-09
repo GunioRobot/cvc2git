@@ -1,5 +1,6 @@
 from commands import getoutput, getstatusoutput
 import sys
+import os.path
 import subprocess
 
 def _is_commit_header(line):
@@ -113,3 +114,8 @@ def locate_rev_in_log(revisions, rev):
 def create_ignore_file():
     '''ignore CONARY'''
     open(".gitignore", "w").write("CONARY\n")
+
+def is_conary_package_dir():
+    '''Check if current directory is a repository created by cvc2git
+    '''
+    return os.path.isfile("CONARY")
