@@ -17,22 +17,20 @@ command_table = {
 def usage():
     print "Usage: cvc2git <command> <options>"
 
-def check_argv():
+def main():
     if len(sys.argv) == 1:
         in_place_convert()
-        sys.exit()
+        return
 
     if len(sys.argv) < 2:
         usage()
-        sys.exit()
+        return
 
     if sys.argv[1] not in command_table:
         print "Error: unknow command %s" % sys.argv[1]
         usage()
-        sys.exit()
+        return
 
-def main():
-    check_argv()
     command_table[sys.argv[1]](*sys.argv[2:])
 
 if __name__ == "__main__":
