@@ -1,0 +1,3 @@
+* use dict for parse_history
+* update readme; fix usage()
+* handle dirty working dir
