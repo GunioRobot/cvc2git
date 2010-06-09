@@ -123,7 +123,12 @@ def init_git_repository():
         getstatusoutput("git init")
         return True
 
-def is_conary_package_dir():
+def is_cvc2git_repo_dir():
     '''Check if current directory is a repository created by cvc2git
+    '''
+    return os.path.isfile("CONARY") and os.path.isdir(".git")
+
+def is_conary_package_dir():
+    '''Check if current directory contains a conary source package
     '''
     return os.path.isfile("CONARY")
