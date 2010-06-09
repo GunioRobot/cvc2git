@@ -22,16 +22,18 @@ def main():
         convert_in_place()
         return
 
-    if sys.argv[1] not in command_table:
-        print "Error: unknow command %s" % sys.argv[1]
+    cmd = sys.argv[1]
+    if cmd not in command_table:
+        print "Error: unknow command %s" % cmd
         usage()
         return
 
+    extra_args = sys.argv[2:]
     try:
-        command_table[sys.argv[1]](*sys.argv[2:])
+        command_table[cmd](*extra_args)
     except TypeError: # FIXME this is likely to be affected by deeper calls
         print "Error: invalid arguments for command %s: %s" % (
-                sys.argv[1], " ".join(sys.argv[2:]))
+                cmd, " ".join(extra_args))
         usage()
 
 if __name__ == "__main__":
