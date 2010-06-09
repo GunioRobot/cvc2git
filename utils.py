@@ -72,7 +72,6 @@ def _get_file_list():
 
 def commit_to_git(revisions):
     rev_count = len(revisions)
-    getstatusoutput("git init")
     for (i, (revision, committer, date, message)) in enumerate(revisions[::-1]):
         sys.stdout.write("converting [%d/%d] commits to git...  revision=%s\r"
                 % (i+1, rev_count, revision))
@@ -111,9 +110,18 @@ def locate_rev_in_log(revisions, rev):
             return i
     return None
 
-def create_ignore_file():
-    '''ignore CONARY'''
-    open(".gitignore", "w").write("CONARY\n")
+def init_git_repository():
+    if os.path.exists(".gitignore"):
+        print "Warning: .gitignore already exists. Skip creating .gitignore."
+    else:
+        open(".gitignore", "w").write("CONARY\n")
+
+    if os.path.exists(".git"):
+        print "Error: can't initialize git repository. .git already exists."
+        return False
+    else:
+        getstatusoutput("git init")
+        return True
 
 def is_conary_package_dir():
     '''Check if current directory is a repository created by cvc2git

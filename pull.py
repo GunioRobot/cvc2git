@@ -3,7 +3,7 @@ import sys
 
 from utils import (
         commit_to_git,
-        create_ignore_file,
+        init_git_repository,
         is_conary_package_dir,
         locate_rev_in_log,
         parse_history,
@@ -27,7 +27,8 @@ def convert_in_place():
         print "Error: current directoy must contain a conary source package, as created by cvc checkout"
         return
 
-    create_ignore_file()
+    if not init_git_repository():
+        return
 
     revisions = parse_history()
     current_rev = read_local_version()

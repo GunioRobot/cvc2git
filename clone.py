@@ -4,7 +4,7 @@ import sys
 
 from utils import (
         commit_to_git,
-        create_ignore_file,
+        init_git_repository,
         parse_history,
         )
 
@@ -36,6 +36,7 @@ def do_clone(trove, dest=None):
     os.chdir(workdir)
     revisions = parse_history()
 
-    create_ignore_file()
+    if not init_git_repository():
+        return
     commit_to_git(revisions)
     print "done"
