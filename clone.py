@@ -8,16 +8,16 @@ from utils import (
         parse_history,
         )
 
-def parse_package_name(full_version):
+def _parse_package_name(full_version):
     '''Parse package name from a full version string'''
     s = full_version.split("=", 1)[0]
     if ":" in s: # this is a trove name, like 'pkg:source'
         return s.split(":", 1)[0]
     return s
 
-def checkout(trove, dest):
+def _checkout(trove, dest):
     if not dest:
-        dest = parse_package_name(trove)
+        dest = _parse_package_name(trove)
     if os.path.isdir(dest) and os.listdir(dest):
         print "Error: directory %s already exists and is not empty" % dest
         sys.exit()
@@ -30,7 +30,7 @@ def checkout(trove, dest):
     return dest
 
 def do_clone(trove, dest=None):
-    workdir = checkout(trove, dest)
+    workdir = _checkout(trove, dest)
 
     # change to work directory
     os.chdir(workdir)
