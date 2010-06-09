@@ -21,7 +21,7 @@ def do_pull():
     commit_to_git(revisions[:ix])
     print "done"
 
-def in_place_convert():
+def convert_in_place():
     # check if is cvc package dir
     create_ignore_file()
 

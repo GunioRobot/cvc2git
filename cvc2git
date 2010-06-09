@@ -3,7 +3,7 @@
 import sys
 
 from clone import do_clone
-from pull import in_place_convert
+from pull import convert_in_place
 from pull import do_pull
 
 command_table = {
@@ -19,7 +19,7 @@ def usage():
 
 def main():
     if len(sys.argv) == 1:
-        in_place_convert()
+        convert_in_place()
         return
 
     if len(sys.argv) < 2:
