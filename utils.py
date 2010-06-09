@@ -2,19 +2,31 @@ from commands import getoutput, getstatusoutput
 import sys
 import subprocess
 
-def start_with_version(line):
+def _is_commit_header(line):
+    '''Check if a line is the header of a commit
+
+    For every line in cvc log output, if starting with a number, it's a "commit
+    header"
+
+    '''
     return (len(line) > 0) and line[0].isdigit()
 
-def find_next_commit(buffer, begin):
+def _locate_next_commit(buffer, begin):
+    '''Locate the next block of commit information in buffer
+
+    buffer should be a fragment from cvc log output
+    '''
     next = begin
     while next < len(buffer):
-        if start_with_version(buffer[next]):
+        if _is_commit_header(buffer[next]):
             break
         else:
             next += 1
     return next
 
-def parse_commit(line):
+def _parse_commit_header(line):
+    '''Parse commit information from a commit header
+    '''
     s = line.split()
     rev = s[0]
     who = ' '.join(s[1:-5])
@@ -22,9 +34,14 @@ def parse_commit(line):
 
     return rev, who, date
 
-def format_commit_msg(msgs):
+def _reformat_msg_body(msgs):
+    '''Strip leading/ending blanks in the commit message
+
+    msgs is a list containing all lines of the original message.
+    Return a string containing the whole reformated message.
+    '''
     ret = '\n'.join([x.strip() for x in msgs])
-    return ret.rstrip()
+    return ret.rstrip() # removing extra empty lines
 
 def parse_history():
     '''Revisions are returned with newest first'''
@@ -32,19 +49,22 @@ def parse_history():
     history = getoutput("cvc log").splitlines()
 
     # drop the first several lines
-    i = find_next_commit(history, 0)
+    i = _locate_next_commit(history, 0)
 
     while i < len(history):
-        revision, committer, date = parse_commit(history[i])
-        t = find_next_commit(history, i+1)
-        message = format_commit_msg(history[i+1:t])
+        revision, committer, date = _parse_commit_header(history[i])
+        t = _locate_next_commit(history, i+1)
+        message = _reformat_msg_body(history[i+1:t])
         i = t
         revisions.append((revision, committer, date, message))
 
     return revisions
 
-def get_file_list():
-    '''recognize the files in <package>:source'''
+def _get_file_list():
+    '''Make a list of the files in the package
+
+    Collect all files that appear in CONARY and also exist in current dir.
+    '''
     ls_result = getoutput("ls | /bin/grep -v CONARY").splitlines()
     conary_config = open("CONARY").read()
     return [x for x in ls_result if x in conary_config]
@@ -62,7 +82,7 @@ def commit_to_git(revisions):
         s = getstatusoutput("cvc update %s" % revision)
         if s[0] != 0:
             print "error with cvc update:", s[1]
-        files = get_file_list()
+        files = _get_file_list()
         s = subprocess.call(["git", "add"] + files,
                 stdout=open('/dev/null', 'w'))
         if s != 0:
