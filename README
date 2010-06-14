@@ -1,10 +1,25 @@
+Name
+----
 cvc2git - Use git to manage conary package:source
 
-Usage
-------
-cvc2git <command> [<options>]
+SYNOPSIS
+--------
+cvc2git
+cvc2git command [args]
 
-Available commands are clone, pull.
+DESCRIPTION
+-----------
+cvc2git is a small program to convert a conary package:source to a local git
+repository.
+
+OPTIONS
+-------
+Available commands are clone, pull, or <empty-command> (i.e. no command).
+
+    <no-command>
+        Convert current directory into a git repository. When cvc2git is run
+        without any command, it assumes current directory to be a conary source
+        package, and convert it into git repository.
 
     clone <package-fullversion> [<directory>]
         Pull a conary package into a new directory.  Aliases: checkout, co
@@ -21,9 +36,9 @@ Available commands are clone, pull.
         Update a local clone to latest revision. This must be run from within
         an existing repository (created with cvc2git clone).  Aliases: update
 
-Implementation
+IMPLEMENTATION
 --------------
-Got quite stuck on the hg-cvc tool, so I started this very-poor-behaving one.
+Got quite stuck on the hg-cvc tool, so I started this one.
 
 About 'cvc2git clone':
     * Checkout the source package (cvc co <package>)
@@ -34,17 +49,11 @@ About 'cvc2git clone':
     * Commit the first revision to git (git add; git commit)
     * Checking out the next revision, on and on.
 
-About 'cvc2git pull':
-    * Record the current local revision (from CONARY file)
-    * Update to the latest revision (cvc update)
-    * Convert the new revisions as done in 'cvc2git clone' (start from the
-        recorded revision, instead of the first one)
-
 You probably already realize from this simple implementation that, cvc2git is
 quite slow.
 
-Example
--------
+EXAMPLES
+--------
 $ python cvc2git monodevelop=foresight.rpath.org@fl:2-devel
 
 Checkout monodevelop:source and put it in the ./monodevelop directory.
