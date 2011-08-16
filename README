@@ -49,8 +49,7 @@ About 'cvc2git clone':
     * Commit the first revision to git (git add; git commit)
     * Checking out the next revision, on and on.
 
-You probably already realize from this simple implementation that, cvc2git is
-quite slow.
+As you realized, this is too damn slow.
 
 EXAMPLES
 --------
