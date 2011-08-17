@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Take a source package name and print the history string
+
+usage() {
+    echo "Usage:  $0 <source-package-name>"
+    echo "    <source-package-name> better includes the full version string"
+    exit 1
+}
+
+if [ $# -ne 1 ]; then
+    usage
+fi
+
+pkg="$1"
+
+tmpdir=`mktemp -d`
+if [ ! tmpdir ]
+then
+    exit 1
+fi
+
+cvc co --dir $tmpdir $pkg 2>/dev/null
+if [ $? -ne 0 ]; then
+    rm -rf $tmpdir
+    exit 1
+fi
+
+cd $tmpdir
+cvc log
+rm -rf $tmpdir

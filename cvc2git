@@ -1,40 +1,213 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
+# Take a list of :source package names, read their commit history (from a cache
+# dir), parse it into python, sort by commit date, and convert into git
+
+from datetime import datetime
+import re
+import optparse
+import os
+import os.path
+import shutil
+import subprocess
 import sys
 
-from clone import do_clone
-from pull import convert_in_place
-from pull import do_pull
+def _is_commit_header(line):
+    '''Check if a line is the header of a commit
 
-command_table = {
-        "clone": do_clone,
-        "checkout": do_clone,
-        "co": do_clone,
-        "pull": do_pull,
-        "update": do_pull,
-        }
+    For every line in cvc log output, if starting with a number, it's a "commit
+    header. (Or else it would start with whitespaces."
 
-def usage():
-    print "Usage: cvc2git <command> <options>"
+    '''
+    return (len(line) > 0) and line[0].isdigit()
+
+def _parse_commit_header(line):
+    '''Parse commit information from a commit header
+    '''
+    s = line.split()
+    rev = s[0]
+    who = ' '.join(s[1:-5])
+    date = " ".join(s[-5:])
+
+    return rev, who, date
+
+def _reformat_msg_body(lines):
+    '''Strip leading/ending blanks in the commit message
+
+    lines is a list containing all lines of the original message.
+    Return a string containing the whole message reformated.
+    '''
+    ret = '\n'.join([x.strip() for x in lines])
+    return ret.rstrip() # removing extra empty lines
+
+class CvcCommit:
+    '''Turns a snippet of commit log into python object
+    '''
+    def __init__(self, pkg, branch, log):
+        '''log should be a complete log snippet for one commit, typically:
+
+            0.86-0.1 jdoe (john.doe@gmail.com) Mon Aug 30 16:07:12 2010
+                version bump
+
+                More details here.
+
+        '''
+        self.pkg = pkg
+        self.branch = branch
+
+        self.revision = None
+        # author name
+        self.authorn = None
+        # author email
+        self.authore = None
+        self.date = None
+        self.msg = None
+
+        self._parse(log)
+
+    def _parse(self, log):
+        revision, author, date = _parse_commit_header(log[0])
+        msg = _reformat_msg_body(log[1:])
+
+        self.revision = revision
+        self.authorn, self.authore = re.match('^(.*) \((.*)\)$', author).groups()
+        self.date = datetime.strptime(date, "%a %b %d %H:%M:%S %Y")
+        self.msg = msg
+
+    def expand(self):
+        return [self.pkg, self.branch, self.revision, self.authorn,
+                self.authore, self.date, self.msg]
+
+    def __str__(self):
+        return ("pkg: %s\nbranch: %s\n"
+                "revision: %s\nauthor: %s<%s>\ndate: %s\nmsg: %s\n" %
+                    self.expand())
+
+def _locate_next_commit(history, begin):
+    '''Locate the next block of commit message in history
+
+    history is the 'cvc log' output
+    '''
+    next = begin
+    while next < len(history):
+        if _is_commit_header(history[next]):
+            break
+        else:
+            next += 1
+    return next
+
+def get_commits(history):
+    '''Extract all commits from one package's "cvc log"
+
+    history is a list of lines containing the whole 'cvc log' output
+    '''
+    commits = []
+
+    pkg = history[0].split()[-1].split(":")[0]
+    branch = history[1].split()[-1]
+
+    i = _locate_next_commit(history, 0)
+
+    while i < len(history):
+        n = _locate_next_commit(history, i+1)
+        commits.append(CvcCommit(pkg, branch, history[i:n]))
+        i = n
+
+    return commits
+
+def sort_commits(commits):
+    '''sort the list of CvcCommit according to commit date
+
+    Sort commits in place.
+    '''
+    return commits.sort(key=lambda c: c.date)
+
+def parse_logs(pkgs, cachedir):
+    '''Parse the commit history of pkgs
+
+    The "cvc log" output for all packages should already be cached in cachedir.
+
+    Return a list of CvcCommit, sorted by commit date
+    '''
+
+    commits = []
+
+    for pkg in pkgs:
+        pkg = pkg.split(":")[0] # accept package names with :source or not
+        f = open("%s/%s.log" % (cachedir, pkg))
+        history = f.readlines()
+        commits.extend(get_commits(history))
+        f.close()
+
+    sort_commits(commits)
+    return commits
+
+def init_git_repo(gitdir):
+    os.mkdir(gitdir)
+    os.chdir(gitdir)
+    subprocess.check_call(['git', 'init'], stdout=open(os.devnull, "w"))
+
+def apply_commits(commits, gitdir):
+    os.chdir(gitdir)
+
+    devnull = open(os.devnull, "w")
+
+    count = len(commits)
+    for i, commit in enumerate(commits):
+        pkg, branch, revision, authorn, authore, dater, msg = commit.expand()
+        date = dater.strftime("%a %b %d %H:%M:%S %Y +0000")
+        if not msg:
+            msg = "<no-commit-message>"
+
+        d = dater.strftime("%Y-%m-%d")
+        percent = (i + 1) * 100 / count
+        clear_line = "\33[2K\r"
+        sys.stdout.write("%sconverting [%d/%d %d%%] %s %s=%s..." %
+                (clear_line, i+1, count, percent, d, pkg, revision))
+        sys.stdout.flush()
+
+        if os.path.exists(pkg):
+            shutil.rmtree(pkg)
+        subprocess.check_call(["cvc", "checkout",
+                               "%s=%s/%s" % (pkg, branch, revision)],
+                              stdout=devnull)
+        # remove the CONARY file. We don't want it in the repo
+        os.remove("%s/CONARY" % pkg)
+        subprocess.check_call(["git", "add", pkg])
+        subprocess.check_call(["git", "commit", "--message", msg],
+                stdout=devnull,
+                env={"GIT_AUTHOR_NAME": authorn,
+                     "GIT_AUTHOR_EMAIL": '<%s>' % authore,
+                     "GIT_AUTHOR_DATE": date,
+                     "GIT_COMMITTER_NAME": authorn,
+                     "GIT_COMMITTER_EMAIL": "<%s>" % authore,
+                     "GIT_COMMITTER_DATE": date})
+    devnull.close()
+    print
 
 def main():
-    if len(sys.argv) == 1:
-        convert_in_place()
-        return
+    usage="Usage: %prog --history-dir=DIR --git-dir=DIR <pkg-name> [<more-packages>]"
+    desc = ("Take a list of package names, create a git repo according"
+            " to their 'cvc log'. Need a list of package names, whose 'cvc log'"
+            " output should be available in <history-dir>")
+    parser = optparse.OptionParser(usage=usage, description=desc)
+    parser.add_option("--history-dir", dest="historydir",
+            help="where can I get the 'cvc log' outputs?")
+    parser.add_option("--git-dir", dest="gitdir",
+            help="where should I create the git repo? It shouldn't already exist.")
+    options, args = parser.parse_args()
+    if not options.historydir:
+        parser.error('Need a --history-dir')
+    if not options.gitdir:
+        parser.error('Need a --git-dir')
 
-    cmd = sys.argv[1]
-    if cmd not in command_table:
-        print "Error: unknow command %s" % cmd
-        usage()
-        return
+    outputdir = os.path.abspath(options.historydir)
+    gitdir = os.path.abspath(options.gitdir)
+    pkgs = args
 
-    extra_args = sys.argv[2:]
-    try:
-        command_table[cmd](*extra_args)
-    except TypeError: # FIXME this is likely to be affected by deeper calls
-        print "Error: invalid arguments for command %s: %s" % (
-                cmd, " ".join(extra_args))
-        usage()
+    commits = parse_logs(pkgs, outputdir)
+    init_git_repo(gitdir)
+    apply_commits(commits, gitdir)
 
 if __name__ == "__main__":
     main()

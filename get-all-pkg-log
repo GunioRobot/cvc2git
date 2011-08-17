@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Get all :source packages on a branch and fetch their 'cvc log' into a cache
+# dir
+
+usage() {
+    echo "Usage:  $0 <label> <dir>"
+    echo "    <label> is something like foresight.rpath.org@fl:2-devel."
+    echo "    <dir> is the cache dir to store the :source package list and their 'cvc log' history"
+    exit 1
+}
+
+if [ $# -ne 2 ]; then
+    usage
+else
+    label="$1"
+    dir="$2"
+fi
+
+mkdir -p $dir/logs
+
+conary rq --labels --install-label $label | grep :source > $dir/sources-list
+
+echo -n fetching history of
+for x in `cat $dir/sources-list`
+do
+    pkgname=`echo $x | cut -d: -f1`
+    echo -n " $pkgname"
+    ./get-pkg-log $x > $dir/logs/$pkgname.log
+done
