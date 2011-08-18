@@ -142,11 +142,6 @@ def parse_logs(pkgs, cachedir):
     sort_commits(commits)
     return commits
 
-def init_git_repo(gitdir):
-    os.mkdir(gitdir)
-    os.chdir(gitdir)
-    subprocess.check_call(['git', 'init'], stdout=open(os.devnull, "w"))
-
 def apply_commits(commits, gitdir):
     os.chdir(gitdir)
 
@@ -185,28 +180,44 @@ def apply_commits(commits, gitdir):
     devnull.close()
     print
 
-def main():
+def init_git_repo(gitdir):
+    os.mkdir(gitdir)
+    os.chdir(gitdir)
+    subprocess.check_call(['git', 'init'], stdout=open(os.devnull, "w"))
+
+def add_options():
     usage="Usage: %prog --history-dir=DIR --git-dir=DIR <pkg-name> [<more-packages>]"
     desc = ("Take a list of package names, create a git repo according"
             " to their 'cvc log'. Need a list of package names, whose 'cvc log'"
             " output should be available in <history-dir>")
+
     parser = optparse.OptionParser(usage=usage, description=desc)
     parser.add_option("--history-dir", dest="historydir",
             help="where can I get the 'cvc log' outputs?")
     parser.add_option("--git-dir", dest="gitdir",
-            help="where should I create the git repo? It shouldn't already exist.")
+            help="where should I create the git repo? It shouldn't already exist. If it is, specify --no-init.")
+    parser.add_option("--no-init-git", dest="initgit", action="store_false",
+            help="If specified, assume there is an existing git repo at git-dir. Or else I will create the dir and repo.")
+
     options, args = parser.parse_args()
     if not options.historydir:
         parser.error('Need a --history-dir')
     if not options.gitdir:
         parser.error('Need a --git-dir')
+    return options, args
 
+def main():
+    options, args = add_options()
+
+    initgit = options.initgit
     outputdir = os.path.abspath(options.historydir)
     gitdir = os.path.abspath(options.gitdir)
     pkgs = args
 
+    if initgit:
+        init_git_repo(gitdir)
+
     commits = parse_logs(pkgs, outputdir)
-    init_git_repo(gitdir)
     apply_commits(commits, gitdir)
 
 if __name__ == "__main__":
