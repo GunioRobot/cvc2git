@@ -20,7 +20,7 @@ then
     exit 1
 fi
 
-cvc co --dir $tmpdir $pkg 2>/dev/null
+cvc co --dir $tmpdir $pkg >/dev/null
 if [ $? -ne 0 ]; then
     rm -rf $tmpdir
     exit 1
