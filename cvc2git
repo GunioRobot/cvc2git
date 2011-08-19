@@ -26,7 +26,7 @@ def _parse_commit_header(line):
     '''
     s = line.split()
     rev = s[0]
-    who = ' '.join(s[1:-5])
+    who = " ".join(s[1:-5])
     date = " ".join(s[-5:])
 
     return rev, who, date
@@ -37,7 +37,7 @@ def _reformat_msg_body(lines):
     lines is a list containing all lines of the original message.
     Return a string containing the whole message reformated.
     '''
-    ret = '\n'.join([x.strip() for x in lines])
+    ret = "\n".join([x.strip() for x in lines])
     return ret.rstrip() # removing extra empty lines
 
 class CvcCommit:
@@ -70,7 +70,7 @@ class CvcCommit:
         msg = _reformat_msg_body(log[1:])
 
         self.revision = revision
-        self.authorn, self.authore = re.match('^(.*) \((.*)\)$', author).groups()
+        self.authorn, self.authore = re.match("^(.*) \((.*)\)$", author).groups()
         self.date = datetime.strptime(date, "%a %b %d %H:%M:%S %Y")
         self.msg = msg
 
@@ -174,7 +174,7 @@ def apply_commits(commits, gitdir):
                     "--allow-empty-message"],
                 stdout=devnull,
                 env={"GIT_AUTHOR_NAME": authorn,
-                     "GIT_AUTHOR_EMAIL": '<%s>' % authore,
+                     "GIT_AUTHOR_EMAIL": "<%s>" % authore,
                      "GIT_AUTHOR_DATE": date,
                      "GIT_COMMITTER_NAME": authorn,
                      "GIT_COMMITTER_EMAIL": "<%s>" % authore,
@@ -185,7 +185,7 @@ def apply_commits(commits, gitdir):
 def init_git_repo(gitdir):
     os.mkdir(gitdir)
     os.chdir(gitdir)
-    subprocess.check_call(['git', 'init'], stdout=open(os.devnull, "w"))
+    subprocess.check_call(["git", "init"], stdout=open(os.devnull, "w"))
 
 def add_options():
     usage="Usage: %prog --history-dir=DIR --git-dir=DIR <pkg-name> [<more-packages>]"
@@ -203,9 +203,9 @@ def add_options():
 
     options, args = parser.parse_args()
     if not options.historydir:
-        parser.error('Need a --history-dir')
+        parser.error("Need a --history-dir")
     if not options.gitdir:
-        parser.error('Need a --git-dir')
+        parser.error("Need a --git-dir")
     return options, args
 
 def main():
