@@ -23,6 +23,7 @@ fetch_history() {
         ./get-pkg-log $x > $cachedir/logs/$pkgname.log
         ((i+=1))
     done
+    echo
 }
 
 if [ "$1" = "--refresh" ]; then

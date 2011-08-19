@@ -151,8 +151,6 @@ def apply_commits(commits, gitdir):
     for i, commit in enumerate(commits):
         pkg, branch, revision, authorn, authore, dater, msg = commit.expand()
         date = dater.strftime("%a %b %d %H:%M:%S %Y +0000")
-        if not msg:
-            msg = "<no-commit-message>"
 
         d = dater.strftime("%Y-%m-%d")
         percent = (i + 1) * 100 / count
@@ -168,8 +166,12 @@ def apply_commits(commits, gitdir):
                               stdout=devnull)
         # remove the CONARY file. We don't want it in the repo
         os.remove("%s/CONARY" % pkg)
-        subprocess.check_call(["git", "add", pkg])
-        subprocess.check_call(["git", "commit", "--message", msg],
+
+        subprocess.check_call(["git", "add", "--all", pkg])
+        subprocess.check_call(
+                ["git", "commit", "--message", msg,
+                    "--allow-empty",
+                    "--allow-empty-message"],
                 stdout=devnull,
                 env={"GIT_AUTHOR_NAME": authorn,
                      "GIT_AUTHOR_EMAIL": '<%s>' % authore,
