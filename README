@@ -18,6 +18,9 @@ Fetch 'cvc log' for one package:
 Pick packages to convert:
     $ ./cvc2git --history-dir=/tmp/cvc-history/logs --git-dir=/tmp/cvc2git/ pilot-link rapid-photo-downloader rapidsvn raptor group-desktop-platform
 
+Refresh the git repo:
+    $ cat /tmp/cvc-history/sources-list | cut -d: -f1 | xargs ./cvc2git --history-dir=/tmp/cvc-history/logs --git-dir=/tmp/cvc2git/ --refresh
+
 TODO
 ----
- - maybe support committing to a different branch of the git repo
+ - Wrap all these commands
