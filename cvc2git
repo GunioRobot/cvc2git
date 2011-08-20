@@ -96,7 +96,7 @@ def _locate_next_commit(history, begin):
             next += 1
     return next
 
-def get_commits(history):
+def get_commits(history, resume_info):
     '''Extract all commits from one package's "cvc log"
 
     history is a list of lines containing the whole 'cvc log' output
@@ -108,11 +108,22 @@ def get_commits(history):
 
     i = _locate_next_commit(history, 0)
 
+    resume_point = resume_info.get(pkg, None)
+    # Note that in 'cvc log' newer revisions come first
+    got_resume_point = False
+
     while i < len(history):
         n = _locate_next_commit(history, i+1)
-        commits.append(CvcCommit(pkg, branch, history[i:n]))
+        commit = CvcCommit(pkg, branch, history[i:n])
+        if not got_resume_point and commit.revision == resume_point:
+            got_resume_point = True
+        if not got_resume_point:
+            commits.append(commit)
         i = n
 
+    # If we are refreshing and there is no new revisions, commits can be empty
+    if commits:
+        resume_info[pkg] = commits[0].revision
     return commits
 
 def sort_commits(commits):
@@ -120,12 +131,18 @@ def sort_commits(commits):
 
     Sort commits in place.
     '''
-    return commits.sort(key=lambda c: c.date)
+    commits.sort(key=lambda c: c.date)
 
-def parse_logs(pkgs, cachedir):
+def parse_logs(pkgs, cachedir, resume_info={}):
     '''Parse the commit history of pkgs
 
     The "cvc log" output for all packages should already be cached in cachedir.
+
+    Resume_info should contain the last revision of packages that have been
+    converted, so we can only convert revisions newer than that.
+
+    resume_info is an in/out parameter; it will be updated with
+    information of this run.
 
     Return a list of CvcCommit, sorted by commit date
     '''
@@ -136,7 +153,7 @@ def parse_logs(pkgs, cachedir):
         pkg = pkg.split(":")[0] # accept package names with :source or not
         f = open("%s/%s.log" % (cachedir, pkg))
         history = f.readlines()
-        commits.extend(get_commits(history))
+        commits.extend(get_commits(history, resume_info))
         f.close()
 
     sort_commits(commits)
@@ -182,10 +199,36 @@ def apply_commits(commits, gitdir):
     devnull.close()
     print
 
+def assert_dir_exist(d, want_exist):
+    exist = os.path.exists(d)
+    if want_exist and not exist:
+        print "Error: %s doesn't exist." % d
+        sys.exit(1)
+    elif not want_exist and exist:
+        print "Error: %s already exists." % d
+        sys.exit(1)
+
 def init_git_repo(gitdir):
     os.mkdir(gitdir)
     os.chdir(gitdir)
     subprocess.check_call(["git", "init"], stdout=open(os.devnull, "w"))
+
+def get_resume_info(gitdir):
+    '''Read the converted revisions out of a git note
+    '''
+    os.chdir(gitdir)
+    output = subprocess.Popen(["git", "notes", "show"],
+            stdout=subprocess.PIPE).communicate()[0]
+    ret = dict([x.split("=") for x in output.split()])
+    return ret
+
+def store_progress(resume_info, gitdir):
+    '''Store the last revision of each converted package in a git note
+    '''
+    os.chdir(gitdir)
+    msg = " ".join(["%s=%s" % (k, v) for (k, v) in resume_info.items()])
+    subprocess.check_call(["git", "notes", "add", "-m", msg],
+            stdout=open(os.devnull, "w"))
 
 def add_options():
     usage="Usage: %prog --history-dir=DIR --git-dir=DIR <pkg-name> [<more-packages>]"
@@ -195,32 +238,51 @@ def add_options():
 
     parser = optparse.OptionParser(usage=usage, description=desc)
     parser.add_option("--history-dir", dest="historydir",
-            help="where can I get the 'cvc log' outputs?")
+            help="Where can I get the 'cvc log' outputs? (Required)")
     parser.add_option("--git-dir", dest="gitdir",
-            help="where should I create the git repo? It shouldn't already exist. If it is, specify --no-init.")
-    parser.add_option("--no-init-git", dest="initgit", action="store_false",
+            help="Where should I create the git repo? It shouldn't already exist. If it is, specify --no-init. (Required)")
+    parser.add_option("--no-init-git", dest="noinitgit", action="store_true",
             help="If specified, assume there is an existing git repo at git-dir. Or else I will create the dir and repo.")
+    parser.add_option("--refresh", dest="refresh", action="store_true",
+            help="If specified, update the git repo to the state specified in history-dir/sources.list. Implies --no-init-git. Info of last run must still be available on a git note on HEAD.")
 
     options, args = parser.parse_args()
     if not options.historydir:
         parser.error("Need a --history-dir")
     if not options.gitdir:
         parser.error("Need a --git-dir")
+    if not args:
+        parser.error("What do you want me to convert?")
     return options, args
 
 def main():
     options, args = add_options()
 
-    initgit = options.initgit
     outputdir = os.path.abspath(options.historydir)
     gitdir = os.path.abspath(options.gitdir)
     pkgs = args
 
-    if initgit:
-        init_git_repo(gitdir)
+    initgit = True
+    refresh = options.refresh
+    if options.noinitgit or refresh:
+        initgit = False
 
-    commits = parse_logs(pkgs, outputdir)
-    apply_commits(commits, gitdir)
+    if initgit:
+        assert_dir_exist(gitdir, False)
+        init_git_repo(gitdir)
+    else:
+        assert_dir_exist(gitdir, True)
+
+    resume_info = {}
+    if refresh:
+        resume_info = get_resume_info(gitdir)
+
+    commits = parse_logs(pkgs, outputdir, resume_info)
+    if commits:
+        apply_commits(commits, gitdir)
+        store_progress(resume_info, gitdir)
+    else:
+        print "Nothing new."
 
 if __name__ == "__main__":
     main()
