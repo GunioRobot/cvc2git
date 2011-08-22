@@ -222,11 +222,17 @@ def get_git_branch(gitdir):
     branch = output.splitlines()[0].split()[-1]
     return branch
 
-def get_git_head(gitdir):
+def is_initial_repo(gitdir):
     status = subprocess.Popen(["git", "status"], cwd=gitdir,
             stdout=subprocess.PIPE).communicate()[0]
     status = status.splitlines()
     if len(status) > 2 and status[2] == "# Initial commit":
+        return True
+    else:
+        return False
+
+def get_git_head(gitdir):
+    if is_initial_repo(gitdir):
         head = "Initial commit"
     else:
         output = subprocess.Popen(["git", "log", "-1", "--format=oneline", "--abbrev-commit"],
@@ -237,9 +243,12 @@ def get_git_head(gitdir):
 def get_resume_info(gitdir):
     '''Read the converted revisions out of a git note
     '''
-    output = subprocess.Popen(["git", "notes", "show"], cwd=gitdir,
-            stdout=subprocess.PIPE).communicate()[0]
-    ret = dict([x.split("=") for x in output.split()])
+    if is_initial_repo(gitdir):
+        ret = {}
+    else:
+        output = subprocess.Popen(["git", "notes", "show"], cwd=gitdir,
+                stdout=subprocess.PIPE).communicate()[0]
+        ret = dict([x.split("=") for x in output.split()])
     return ret
 
 def store_progress(resume_info, gitdir):
