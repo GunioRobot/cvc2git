@@ -160,6 +160,7 @@ def parse_logs(pkgs, cachedir, resume_info={}):
     return commits
 
 def apply_commits(commits, gitdir):
+    saved_cwd = os.getcwd()
     os.chdir(gitdir)
 
     devnull = open(os.devnull, "w")
@@ -198,6 +199,7 @@ def apply_commits(commits, gitdir):
                      "GIT_COMMITTER_DATE": date})
     devnull.close()
     print
+    os.chdir(saved_cwd)
 
 def assert_dir_exist(d, want_exist):
     exist = os.path.exists(d)
@@ -210,35 +212,32 @@ def assert_dir_exist(d, want_exist):
 
 def init_git_repo(gitdir):
     os.mkdir(gitdir)
-    os.chdir(gitdir)
-    subprocess.check_call(["git", "init"], stdout=open(os.devnull, "w"))
+    subprocess.check_call(["git", "init"], stdout=open(os.devnull, "w"),
+            cwd=gitdir)
 
 def get_git_branch(gitdir):
-    os.chdir(gitdir)
     # Use `git status` instead of `git branch` since it can handle initial commit
-    output = subprocess.Popen(["git", "status"],
+    output = subprocess.Popen(["git", "status"], cwd=gitdir,
             stdout=subprocess.PIPE).communicate()[0]
     branch = output.splitlines()[0].split()[-1]
     return branch
 
 def get_git_head(gitdir):
-    os.chdir(gitdir)
-    status = subprocess.Popen(["git", "status"],
+    status = subprocess.Popen(["git", "status"], cwd=gitdir,
             stdout=subprocess.PIPE).communicate()[0]
     status = status.splitlines()
     if len(status) > 2 and status[2] == "# Initial commit":
         head = "Initial commit"
     else:
         output = subprocess.Popen(["git", "log", "-1", "--format=oneline", "--abbrev-commit"],
-                stdout=subprocess.PIPE).communicate()[0]
+                stdout=subprocess.PIPE, cwd=gitdir).communicate()[0]
         head = output.strip()
     return head
 
 def get_resume_info(gitdir):
     '''Read the converted revisions out of a git note
     '''
-    os.chdir(gitdir)
-    output = subprocess.Popen(["git", "notes", "show"],
+    output = subprocess.Popen(["git", "notes", "show"], cwd=gitdir,
             stdout=subprocess.PIPE).communicate()[0]
     ret = dict([x.split("=") for x in output.split()])
     return ret
@@ -246,10 +245,9 @@ def get_resume_info(gitdir):
 def store_progress(resume_info, gitdir):
     '''Store the last revision of each converted package in a git note
     '''
-    os.chdir(gitdir)
     msg = " ".join(["%s=%s" % (k, v) for (k, v) in resume_info.items()])
     subprocess.check_call(["git", "notes", "add", "-m", msg],
-            stdout=open(os.devnull, "w"))
+            stdout=open(os.devnull, "w"), cwd=gitdir)
 
 def add_options():
     usage = "Usage: %prog --history-dir=DIR --git-dir=DIR <pkg-name> [<more-packages>]"
