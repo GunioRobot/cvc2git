@@ -1,13 +1,17 @@
 Usage
 -----
 
-Fetch all the 'cvc log'
-    $ ./get-all-pkg-log foresight.rpath.org@fl:2-devel /tmp/cvc-history
+    $ cachedir="/tmp/cvc-history"
+    $ gitdir="/tmp/cvc2git/"
+    $ label="foresight.rpath.org@fl:2-devel"
+    $
+    $ ./get-all-pkg-log "$label" "$cachedir"
+    $ cat "$cachedir"/sources-list | cut -d: -f1 | xargs ./cvc2git.py --history-dir="$cachedir"/logs --git-dir="$gitdir"
 
-Convert to git:
-    $ cat /tmp/cvc-history/sources-list | cut -d: -f1 | xargs ./cvc2git.py --history-dir=/tmp/cvc-history/logs --git-dir=/tmp/cvc2git/
+You could save these to a helper script, as the example-* scripts do.
 
----
+More
+----
 
 Refresh the 'cvc log' cache:
     $ ./get-all-pkg-log --refresh foresight.rpath.org@fl:2-devel /tmp/cvc-history
