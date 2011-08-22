@@ -5,7 +5,7 @@ Fetch all the 'cvc log'
     $ ./get-all-pkg-log foresight.rpath.org@fl:2-devel /tmp/cvc-history
 
 Convert to git:
-    $ cat /tmp/cvc-history/sources-list | cut -d: -f1 | xargs ./cvc2git --history-dir=/tmp/cvc-history/logs --git-dir=/tmp/cvc2git/
+    $ cat /tmp/cvc-history/sources-list | cut -d: -f1 | xargs ./cvc2git.py --history-dir=/tmp/cvc-history/logs --git-dir=/tmp/cvc2git/
 
 ---
 
@@ -16,10 +16,10 @@ Fetch 'cvc log' for one package:
     # ./get-pkg-log zenity:source=foresight.rpath.org@fl:1-devel > some/file
 
 Pick packages to convert:
-    $ ./cvc2git --history-dir=/tmp/cvc-history/logs --git-dir=/tmp/cvc2git/ pilot-link rapid-photo-downloader rapidsvn raptor group-desktop-platform
+    $ ./cvc2git.py --history-dir=/tmp/cvc-history/logs --git-dir=/tmp/cvc2git/ pilot-link rapid-photo-downloader rapidsvn raptor group-desktop-platform
 
 Refresh the git repo:
-    $ cat /tmp/cvc-history/sources-list | cut -d: -f1 | xargs ./cvc2git --history-dir=/tmp/cvc-history/logs --git-dir=/tmp/cvc2git/ --refresh
+    $ cat /tmp/cvc-history/sources-list | cut -d: -f1 | xargs ./cvc2git.py --history-dir=/tmp/cvc-history/logs --git-dir=/tmp/cvc2git/ --refresh
 
 TODO
 ----
