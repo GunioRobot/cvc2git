@@ -213,6 +213,27 @@ def init_git_repo(gitdir):
     os.chdir(gitdir)
     subprocess.check_call(["git", "init"], stdout=open(os.devnull, "w"))
 
+def get_git_branch(gitdir):
+    os.chdir(gitdir)
+    # Use `git status` instead of `git branch` since it can handle initial commit
+    output = subprocess.Popen(["git", "status"],
+            stdout=subprocess.PIPE).communicate()[0]
+    branch = output.splitlines()[0].split()[-1]
+    return branch
+
+def get_git_head(gitdir):
+    os.chdir(gitdir)
+    status = subprocess.Popen(["git", "status"],
+            stdout=subprocess.PIPE).communicate()[0]
+    status = status.splitlines()
+    if len(status) > 2 and status[2] == "# Initial commit":
+        head = "Initial commit"
+    else:
+        output = subprocess.Popen(["git", "log", "-1", "--format=oneline", "--abbrev-commit"],
+                stdout=subprocess.PIPE).communicate()[0]
+        head = output.strip()
+    return head
+
 def get_resume_info(gitdir):
     '''Read the converted revisions out of a git note
     '''
@@ -231,7 +252,7 @@ def store_progress(resume_info, gitdir):
             stdout=open(os.devnull, "w"))
 
 def add_options():
-    usage="Usage: %prog --history-dir=DIR --git-dir=DIR <pkg-name> [<more-packages>]"
+    usage = "Usage: %prog --history-dir=DIR --git-dir=DIR <pkg-name> [<more-packages>]"
     desc = ("Take a list of package names, create a git repo according"
             " to their 'cvc log'. Need a list of package names, whose 'cvc log'"
             " output should be available in <history-dir>")
@@ -270,8 +291,12 @@ def main():
     if initgit:
         assert_dir_exist(gitdir, False)
         init_git_repo(gitdir)
+        print "New git repo created at %s." % gitdir
     else:
         assert_dir_exist(gitdir, True)
+        branch = get_git_branch(gitdir)
+        head = get_git_head(gitdir)
+        print "Will reuse the git repo at %s (branch: %s; HEAD: `%s`)." % (gitdir, branch, head)
 
     resume_info = {}
     if refresh:
@@ -281,8 +306,10 @@ def main():
     if commits:
         apply_commits(commits, gitdir)
         store_progress(resume_info, gitdir)
+        head = get_git_head(gitdir)
+        print "Conversion succeeded. HEAD of the git repo is now: `%s`" % head
     else:
-        print "Nothing new."
+        print "Nothing changed."
 
 if __name__ == "__main__":
     main()
