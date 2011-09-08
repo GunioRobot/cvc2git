@@ -1,5 +1,14 @@
+Tool to convert a conary repository to a git repository
+
+License: GPLv2
+
 Usage
 -----
+
+Two scripts are provided: get-all-pkg-log, cvc2git.py. The first is to fetch
+the logs of the packages into a cache dir, then the second can use the cache
+and build a git repo out of it. I haven't managed to make the scripts too
+fancy, so you have to manually combine the two scripts as proper.
 
     $ cachedir="/tmp/cvc-history"
     $ gitdir="/tmp/cvc2git/"
@@ -27,4 +36,4 @@ Refresh the git repo:
 
 TODO
 ----
- - Wrap all these commands
+ - Wrap all these commands and hide implementation details
