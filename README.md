@@ -5,7 +5,7 @@ License: GPLv2
 Usage
 =====
 
-Two scripts are provided: get-all-pkg-log, cvc2git.py. The first is to fetch
+Two scripts are provided: `get-all-pkg-log`, `cvc2git.py`. The first is to fetch
 the logs of the packages into a cache dir, then the second can use the cache
 and build a git repo out of it. I haven't managed to make the scripts too
 fancy, so you have to manually combine the two scripts as proper.
@@ -17,7 +17,7 @@ fancy, so you have to manually combine the two scripts as proper.
     $ ./get-all-pkg-log "$label" "$cachedir"
     $ cat "$cachedir"/sources-list | cut -d: -f1 | xargs ./cvc2git.py --history-dir="$cachedir"/logs --git-dir="$gitdir"
 
-You could save these to a helper script, as the example-* scripts do.
+You could save these to a helper script, as the `example-*` scripts do.
 
 More
 ====
