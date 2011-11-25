@@ -133,10 +133,10 @@ def sort_commits(commits):
     '''
     commits.sort(key=lambda c: c.date)
 
-def parse_logs(pkgs, cachedir, resume_info={}):
+def parse_logs(pkgs, logsdir, resume_info={}):
     '''Parse the commit history of pkgs
 
-    The "cvc log" output for all packages should already be cached in cachedir.
+    The "cvc log" output for all packages should already be cached in logsdir.
 
     Resume_info should contain the last revision of packages that have been
     converted, so we can only convert revisions newer than that.
@@ -151,7 +151,7 @@ def parse_logs(pkgs, cachedir, resume_info={}):
 
     for pkg in pkgs:
         pkg = pkg.split(":")[0] # accept package names with :source or not
-        f = open("%s/%s.log" % (cachedir, pkg))
+        f = open("%s/%s.log" % (logsdir, pkg))
         history = f.readlines()
         commits.extend(get_commits(history, resume_info))
         f.close()
@@ -286,7 +286,7 @@ def add_options():
 def main():
     options, args = add_options()
 
-    outputdir = os.path.abspath(options.historydir)
+    logsdir = os.path.abspath(options.historydir)
     gitdir = os.path.abspath(options.gitdir)
     pkgs = args
 
@@ -309,7 +309,7 @@ def main():
     if refresh:
         resume_info = get_resume_info(gitdir)
 
-    commits = parse_logs(pkgs, outputdir, resume_info)
+    commits = parse_logs(pkgs, logsdir, resume_info)
     if commits:
         apply_commits(commits, gitdir)
         store_progress(resume_info, gitdir)
