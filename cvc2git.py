@@ -15,11 +15,16 @@ import sys
 def _is_commit_header(line):
     '''Check if a line is the header of a commit
 
-    For every line in cvc log output, if starting with a number, it's a "commit
-    header. (Or else it would start with whitespaces."
+    For every line in cvc log output (except the first two lines), if not
+    starting with a whitespace, it's a "commit header.
+
+    E.g.
+
+        tip-1 Og Maciel (omaciel@foresightlinux.org) Fri Jan 29 12:41:57 2010
+            Version bump and now pulling from bitbucket.
 
     '''
-    return (len(line) > 0) and line[0].isdigit()
+    return (len(line) > 0) and not line[0].isspace()
 
 def _parse_commit_header(line):
     '''Parse commit information from a commit header
@@ -100,11 +105,27 @@ def get_commits(history, resume_info):
     '''Extract all commits from one package's "cvc log"
 
     history is a list of lines containing the whole 'cvc log' output
+
+    E.g.
+
+        Name  : epdb:source
+        Branch: /foresight.rpath.org@fl:2-devel
+
+        tip-1 Og Maciel (omaciel@foresightlinux.org) Fri Jan 29 12:41:57 2010
+            Version bump and now pulling from bitbucket.
     '''
     commits = []
 
+    # the first two lines must be Name: and Branch:
+    if not (history[0].startswith("Name") and history[1].startswith("Branch")):
+        print "Error! %s seems mal-formated. Aborting."
+        print "I haven't touched the git repo yet, so it's probably ok."
+        print "But if any doubt, please have a check."
+        sys.exit(1)
+
     pkg = history[0].split()[-1].split(":")[0]
     branch = history[1].split()[-1]
+    history = history[2:] # drop the first two lines
 
     i = _locate_next_commit(history, 0)
 
@@ -152,7 +173,7 @@ def parse_logs(pkgs, logsdir, resume_info={}):
     for pkg in pkgs:
         pkg = pkg.split(":")[0] # accept package names with :source or not
         f = open("%s/%s.log" % (logsdir, pkg))
-        history = f.readlines()
+        history = f.read().strip().splitlines()
         commits.extend(get_commits(history, resume_info))
         f.close()
 
