@@ -25,7 +25,7 @@ def check_output(*args, **kw):
         raise subprocess.CalledProcessError(retcode, args[0])
     return output
 
-def _is_commit_header(line):
+def is_commit_header(line):
     '''Check if a line is the header of a commit
 
     For every line in cvc log output (except the first two lines), if not
@@ -39,7 +39,7 @@ def _is_commit_header(line):
     '''
     return (len(line) > 0) and not line[0].isspace()
 
-def _parse_commit_header(line):
+def parse_commit_header(line):
     '''Parse commit information from a commit header
     '''
     s = line.split()
@@ -49,7 +49,7 @@ def _parse_commit_header(line):
 
     return rev, who, date
 
-def _reformat_msg_body(lines):
+def reformat_msg_body(lines):
     '''Strip leading/ending blanks in the commit message
 
     lines is a list containing all lines of the original message.
@@ -84,8 +84,8 @@ class CvcCommit:
         self._parse(log)
 
     def _parse(self, log):
-        revision, author, date = _parse_commit_header(log[0])
-        msg = _reformat_msg_body(log[1:])
+        revision, author, date = parse_commit_header(log[0])
+        msg = reformat_msg_body(log[1:])
 
         self.revision = revision
         self.authorn, self.authore = re.match("^(.*) \((.*)\)$", author).groups()
@@ -101,14 +101,14 @@ class CvcCommit:
                 "revision: %s\nauthor: %s<%s>\ndate: %s\nmsg: %s\n" %
                     self.expand())
 
-def _locate_next_commit(history, begin):
+def locate_next_commit(history, begin):
     '''Locate the next block of commit message in history
 
     history is the 'cvc log' output
     '''
     nxt = begin
     while nxt < len(history):
-        if _is_commit_header(history[nxt]):
+        if is_commit_header(history[nxt]):
             break
         else:
             nxt += 1
@@ -140,14 +140,14 @@ def get_commits(history, resume_info):
     branch = history[1].split()[-1]
     history = history[2:] # drop the first two lines
 
-    i = _locate_next_commit(history, 0)
+    i = locate_next_commit(history, 0)
 
     resume_point = resume_info.get(pkg, None)
     # Note that in 'cvc log' newer revisions come first
     got_resume_point = False
 
     while i < len(history):
-        n = _locate_next_commit(history, i+1)
+        n = locate_next_commit(history, i+1)
         commit = CvcCommit(pkg, branch, history[i:n])
         if not got_resume_point and commit.revision == resume_point:
             got_resume_point = True
