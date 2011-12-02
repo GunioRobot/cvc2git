@@ -25,10 +25,6 @@ More
 A tip on git. If you want to put the different branches in the same repo (as
 done at https://github.com/foresight/legacy/), use `git checkout --orphan`.
 
-Refresh the 'cvc log' cache:
-
-    $ ./get-all-pkg-log --refresh foresight.rpath.org@fl:2-devel /tmp/cvc-history
-
 Fetch 'cvc log' for one package:
 
     # ./get-pkg-log zenity:source=foresight.rpath.org@fl:1-devel > some/file

@@ -4,13 +4,20 @@
 # cachedir
 
 usage() {
-    echo "Usage:  $0 [options] <label> <cachedir>"
+    echo "Usage:  $0 <label> <cachedir>"
     echo "    <label> is something like foresight.rpath.org@fl:2-devel"
     echo "    <cachedir> is the cache cachedir to store the :source package list and their 'cvc log' history"
-    echo "    [options]:"
-    echo "            --refresh    refresh existing 'cvc log'"
+    echo "Will reuse <cachedir> if it already exists."
     exit 1
 }
+
+if [ $# -ne 2 ]; then
+    usage
+fi
+
+prefix="$(dirname $0)"
+label="$1"
+cachedir="$2"
 
 fetch_history() {
     pkgs="$@"
@@ -20,40 +27,28 @@ fetch_history() {
     do
         pkgname=`echo $x | cut -d: -f1`
         printf "\33[2K\rfetching history of [%d/%d %d%%] %s..." $i $count $(($i * 100 / $count)) $pkgname
-        ./get-pkg-log $x > $cachedir/logs/$pkgname.log
+        $prefix/get-pkg-log $x > $cachedir/logs/$pkgname.log
         ((i+=1))
     done
     echo
 }
 
-if [ "$1" = "--refresh" ]; then
-    refresh="true"
-    shift
-fi
+mkdir -p $cachedir/logs
+conary rq --labels --install-label $label | grep :source > $cachedir/sources-list.new
 
-if [ $# -ne 2 ]; then
-    usage
-fi
-
-label="$1"
-cachedir="$2"
-
-if [ "$refresh" != "true" ]; then
-    mkdir -p $cachedir/logs
-    conary rq --labels --install-label $label | grep :source > $cachedir/sources-list
-    fetch_history `cat $cachedir/sources-list`
+if [ ! -f $cachedir/sources-list ]; then
+    pkgs=`cat $cachedir/sources-list.new`
 else
-    conary rq --labels --install-label $label | grep :source > $cachedir/sources-list.new
-
     pkgs=$(diff -u $cachedir/sources-list $cachedir/sources-list.new |
            tail -n +3 | # remove the diff header
            grep "^+" | # only consider the + lines
            cut -b2- ) # remove the leading +
+fi
 
-    if [ -n "$pkgs" ]; then
-        fetch_history $pkgs
-        mv -f $cachedir/sources-list.new $cachedir/sources-list
-    else
-        echo "Already up to date"
-    fi
+mv -f $cachedir/sources-list.new $cachedir/sources-list
+
+if [ -z "$pkgs" ]; then
+    echo "Already up to date"
+else
+    fetch_history $pkgs
 fi

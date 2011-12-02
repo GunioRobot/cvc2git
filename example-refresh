@@ -9,5 +9,5 @@ pushd $gitdir || exit 1
 git checkout $branch || exit 1
 popd
 
-./get-all-pkg-log --refresh $label $cachedir
+./get-all-pkg-log $label $cachedir
 cat $cachedir/sources-list | cut -d: -f1 | xargs ./cvc2git.py --history-dir=$cachedir/logs --git-dir=$gitdir --refresh
