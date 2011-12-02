@@ -5,32 +5,33 @@ License: GPLv2
 Usage
 =====
 
-Two scripts are provided: `get-all-pkg-log`, `cvc2git.py`. The first is to fetch
-the logs of the packages into a cache dir, then the second can use the cache
-and build a git repo out of it. I haven't managed to make the scripts too
-fancy, so you have to manually combine the two scripts as proper.
+    $ cvc2git.py --prefix=foresight.rpath.org@fl:2-devel --cachedir=/tmp/cvc2gitcache --git-dir=/tmp/gitrepo
 
-    $ cachedir="/tmp/cvc-history"
-    $
-    $ get-all-pkg-log foresight.rpath.org@fl:2-devel "$cachedir"
-    $ cvc2git.py --cachedir="$cachedir" --git-dir=/tmp/cvc2git/
-
-You could save these to a helper script, as the `example-*` scripts do.
+The command can be safely rerun; it will reuse the cache and the git repo.
 
 More
 ====
 
+* Options:
+
+        --no-refresh    If specified, will not refresh the cache at cachedir
+
+* If a list of packages are specified explicitly, cvc2git will only convert these:
+
+        $ cvc2git.py --cachedir=/tmp/cvc-history/ --git-dir=/tmp/gitrepo/ pkgfoo pkgbar pkgmore
+
+* The two utility scripts can be used standalone.
+
+* get-all-pkg-log - fetch 'cvc log' for all packages on a label
+
+        $ get-all-pkg-log foresight.rpath.org@fl:2-devel /tmp/cvc2gitcache
+
+* get-pkg-log - fetch 'cvc log' for one package:
+
+        $ get-pkg-log zenity:source=foresight.rpath.org@fl:1-devel > some/file
+
+Others
+======
+
 A tip on git. If you want to put the different branches in the same repo (as
 done at https://github.com/foresight/legacy/), use `git checkout --orphan`.
-
-If a list of packages are specified explicitly, cvc2git will only convert these:
-
-    $ cvc2git.py --cachedir=/tmp/cvc-history/ --git-dir=/tmp/gitrepo/ pkgfoo pkgbar pkgmore
-
-Fetch 'cvc log' for one package:
-
-    # get-pkg-log zenity:source=foresight.rpath.org@fl:1-devel > some/file
-
-TODO
-====
- - Wrap all these commands and hide implementation details

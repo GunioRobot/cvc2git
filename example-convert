@@ -1,8 +1,0 @@
-#!/bin/bash
-
-cachedir="/tmp/fl2/tmp"
-gitdir="/tmp/cvc2git"
-label="foresight.rpath.org@fl:2-devel"
-
-get-all-pkg-log $label $cachedir
-cvc2git.py --cachedir=$cachedir --git-dir=$gitdir

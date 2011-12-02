@@ -292,22 +292,29 @@ def read_package_list(sourcelistfile):
     return ret
 
 def add_options():
-    usage = ("Usage: %prog --cachedir=DIR --git-dir=DIR\n"
-             "       %prog --cachedir=DIR --git-dir=DIR <pkg-name> [<more-packages>]")
-    desc = ("Take the data collected by get-all-pkg-log and create a git repo"
+    usage = ("Usage: %prog --label=CONARY_LABEL --cachedir=DIR --git-dir=DIR [options]\n"
+             "       %prog --label=CONARY_LABEL --cachedir=DIR --git-dir=DIR [options] <pkg-name> [<more-packages>]")
+    desc = ("Take the data collected by get-all-pkg-log and create a git repo. "
             "If a list of packages are specified, will convert these packages only.")
 
     parser = optparse.OptionParser(usage=usage, description=desc)
+    parser.add_option("--label", dest="label",
+            help="Which label to convert? (Required)")
     parser.add_option("--cachedir", dest="cachedir",
-            help="Where are the data created by get-all-pkg-log? (Required)")
+            help="Need a cache dir to put intermediate stuff. This dir will " \
+                 "be reused when you run cvc2git again in the future, so it " \
+                 "better not resides in a regularly cleaned-up /tmp, e.g. "\
+                 "(Required)")
     parser.add_option("--git-dir", dest="gitdir",
             help="Where should I create the git repo? (Required)")
+    parser.add_option("--no-refresh", dest="norefreshcache",
+            help="If specified, will not refresh the cache at cachedir",
+            action="store_true")
 
     options, args = parser.parse_args()
-    if not options.cachedir:
-        parser.error("Need a --cachedir")
-    if not options.gitdir:
-        parser.error("Need a --git-dir")
+    if not (options.label and options.cachedir and options.gitdir):
+        parser.print_help()
+        sys.exit(1)
     return options, args
 
 def main():
@@ -327,6 +334,11 @@ def main():
         head = get_git_head(gitdir)
         print "Reusing the git repo at %s (branch: %s; HEAD: `%s`)." % (
                 gitdir, branch, head)
+
+    if not options.norefreshcache:
+        prefix = os.path.dirname(sys.argv[0])
+        subprocess.check_call([prefix + "/get-all-pkg-log",
+            options.label, cachedir])
 
     if not pkgs:
         pkgs = read_package_list(cachedir + "/sources-list")

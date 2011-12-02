@@ -9,5 +9,4 @@ pushd $gitdir || exit 1
 git checkout $branch || exit 1
 popd
 
-get-all-pkg-log $label $cachedir
-cvc2git.py --history-dir=$cachedir/logs --git-dir=$gitdir
+cvc2git.py --label=$label --history-dir=$cachedir/logs --git-dir=$gitdir

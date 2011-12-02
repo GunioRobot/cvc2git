@@ -52,3 +52,5 @@ if [ -z "$pkgs" ]; then
 else
     fetch_history $pkgs
 fi
+
+exit 0
