@@ -167,7 +167,7 @@ def sort_commits(commits):
     '''
     commits.sort(key=lambda c: c.date)
 
-def parse_logs(pkgs, logsdir, resume_info=None):
+def parse_logs(pkgs, logsdir, resume_info):
     '''Parse the commit history of pkgs
 
     The "cvc log" output for all packages should already be cached in logsdir.
@@ -176,14 +176,13 @@ def parse_logs(pkgs, logsdir, resume_info=None):
     converted, so we can only convert revisions newer than that.
 
     resume_info is an in/out parameter; it will be updated with
-    information of this run.
+    information of this run. It must be a dict, even if empty.
 
     Return a list of CvcCommit, sorted by commit date
     '''
 
     commits = []
-    if not resume_info:
-        resume_info = {}
+    assert isinstance(resume_info, dict)
 
     for pkg in pkgs:
         pkg = pkg.split(":")[0] # accept package names with :source or not
