@@ -167,10 +167,10 @@ def sort_commits(commits):
     '''
     commits.sort(key=lambda c: c.date)
 
-def parse_logs(pkgs, logsdir, resume_info):
+def parse_logs(pkgs, cachedir, resume_info):
     '''Parse the commit history of pkgs
 
-    The "cvc log" output for all packages should already be cached in logsdir.
+    The "cvc log" output for all packages should already be cached in cachedir.
 
     Resume_info should contain the last revision of packages that have been
     converted, so we can only convert revisions newer than that.
@@ -186,7 +186,7 @@ def parse_logs(pkgs, logsdir, resume_info):
 
     for pkg in pkgs:
         pkg = pkg.split(":")[0] # accept package names with :source or not
-        f = open("%s/%s.log" % (logsdir, pkg))
+        f = open("%s/%s.log" % (cachedir, pkg))
         history = f.read().strip().splitlines()
         commits.extend(get_commits(history, resume_info))
         f.close()
@@ -285,20 +285,19 @@ def store_progress(resume_info, gitdir):
             stdout=open(os.devnull, "w"), cwd=gitdir)
 
 def add_options():
-    usage = "Usage: %prog --history-dir=DIR --git-dir=DIR <pkg-name> [<more-packages>]"
-    desc = ("Take a list of package names, create a git repo according"
-            " to their 'cvc log'. Need a list of package names, whose 'cvc log'"
-            " output should be available in <history-dir>")
+    usage = "Usage: %prog --cachedir=DIR --git-dir=DIR <pkg-name> [<more-packages>]"
+    desc = ("Take a list of package names, and create a git repo according"
+            " to the data collected by get-all-pkg-log.")
 
     parser = optparse.OptionParser(usage=usage, description=desc)
-    parser.add_option("--history-dir", dest="historydir",
-            help="Where can I get the 'cvc log' outputs? (Required)")
+    parser.add_option("--cachedir", dest="cachedir",
+            help="Where are the data created by get-all-pkg-log? (Required)")
     parser.add_option("--git-dir", dest="gitdir",
-            help="Where should I create the git repo? It shouldn't already exist. If it is, specify --no-init. (Required)")
+            help="Where should I create the git repo? (Required)")
 
     options, args = parser.parse_args()
-    if not options.historydir:
-        parser.error("Need a --history-dir")
+    if not options.cachedir:
+        parser.error("Need a --cachedir")
     if not options.gitdir:
         parser.error("Need a --git-dir")
     if not args:
@@ -308,7 +307,8 @@ def add_options():
 def main():
     options, args = add_options()
 
-    logsdir = os.path.abspath(options.historydir)
+    cachedir = os.path.abspath(options.cachedir)
+    logsdir = os.path.abspath(options.cachedir + "/logs")
     gitdir = os.path.abspath(options.gitdir)
     pkgs = args
 
