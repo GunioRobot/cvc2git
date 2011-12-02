@@ -93,13 +93,13 @@ def _locate_next_commit(history, begin):
 
     history is the 'cvc log' output
     '''
-    next = begin
-    while next < len(history):
-        if _is_commit_header(history[next]):
+    nxt = begin
+    while nxt < len(history):
+        if _is_commit_header(history[nxt]):
             break
         else:
-            next += 1
-    return next
+            nxt += 1
+    return nxt
 
 def get_commits(history, resume_info):
     '''Extract all commits from one package's "cvc log"
@@ -154,7 +154,7 @@ def sort_commits(commits):
     '''
     commits.sort(key=lambda c: c.date)
 
-def parse_logs(pkgs, logsdir, resume_info={}):
+def parse_logs(pkgs, logsdir, resume_info=None):
     '''Parse the commit history of pkgs
 
     The "cvc log" output for all packages should already be cached in logsdir.
@@ -169,6 +169,8 @@ def parse_logs(pkgs, logsdir, resume_info={}):
     '''
 
     commits = []
+    if not resume_info:
+        resume_info = {}
 
     for pkg in pkgs:
         pkg = pkg.split(":")[0] # accept package names with :source or not
