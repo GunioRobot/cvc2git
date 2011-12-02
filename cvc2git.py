@@ -237,17 +237,7 @@ def apply_commits(commits, gitdir):
     print
     os.chdir(saved_cwd)
 
-def assert_dir_exist(d, want_exist):
-    exist = os.path.exists(d)
-    if want_exist and not exist:
-        print "Error: %s doesn't exist." % d
-        sys.exit(1)
-    elif not want_exist and exist:
-        print "Error: %s already exists." % d
-        sys.exit(1)
-
 def init_git_repo(gitdir):
-    os.mkdir(gitdir)
     subprocess.check_call(["git", "init"], stdout=open(os.devnull, "w"),
             cwd=gitdir)
 
@@ -306,10 +296,6 @@ def add_options():
             help="Where can I get the 'cvc log' outputs? (Required)")
     parser.add_option("--git-dir", dest="gitdir",
             help="Where should I create the git repo? It shouldn't already exist. If it is, specify --no-init. (Required)")
-    parser.add_option("--no-init-git", dest="noinitgit", action="store_true",
-            help="If specified, assume there is an existing git repo at git-dir. Or else I will create the dir and repo.")
-    parser.add_option("--refresh", dest="refresh", action="store_true",
-            help="If specified, update the git repo to the state specified in history-dir/sources.list. Implies --no-init-git. Info of last run must still be available on a git note on HEAD.")
 
     options, args = parser.parse_args()
     if not options.historydir:
@@ -327,25 +313,18 @@ def main():
     gitdir = os.path.abspath(options.gitdir)
     pkgs = args
 
-    initgit = True
-    refresh = options.refresh
-    if options.noinitgit or refresh:
-        initgit = False
-
-    if initgit:
-        assert_dir_exist(gitdir, False)
+    if not os.path.exists(gitdir):
+        os.makedirs(gitdir)
+    if not os.path.exists(gitdir + "/.git"):
         init_git_repo(gitdir)
         print "New git repo created at %s." % gitdir
     else:
-        assert_dir_exist(gitdir, True)
         branch = get_git_branch(gitdir)
         head = get_git_head(gitdir)
-        print "Will reuse the git repo at %s (branch: %s; HEAD: `%s`)." % (gitdir, branch, head)
+        print "Reusing the git repo at %s (branch: %s; HEAD: `%s`)." % (
+                gitdir, branch, head)
 
-    resume_info = {}
-    if refresh:
-        resume_info = get_resume_info(gitdir)
-
+    resume_info = get_resume_info(gitdir)
     commits = parse_logs(pkgs, logsdir, resume_info)
     if commits:
         apply_commits(commits, gitdir)

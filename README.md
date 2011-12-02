@@ -35,7 +35,7 @@ Pick packages to convert:
 
 Refresh the git repo:
 
-    $ cat /tmp/cvc-history/sources-list | cut -d: -f1 | xargs ./cvc2git.py --history-dir=/tmp/cvc-history/logs --git-dir=/tmp/cvc2git/ --refresh
+    $ cat /tmp/cvc-history/sources-list | cut -d: -f1 | xargs ./cvc2git.py --history-dir=/tmp/cvc-history/logs --git-dir=/tmp/cvc2git/
 
 TODO
 ====
