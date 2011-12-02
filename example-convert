@@ -4,5 +4,5 @@ cachedir="/tmp/fl2/tmp"
 gitdir="/tmp/cvc2git"
 label="foresight.rpath.org@fl:2-devel"
 
-./get-all-pkg-log $label $cachedir
-cat $cachedir/sources-list | cut -d: -f1 | xargs ./cvc2git.py --history-dir=$cachedir/logs --git-dir=$gitdir
+get-all-pkg-log $label $cachedir
+cvc2git.py --cachedir=$cachedir --git-dir=$gitdir

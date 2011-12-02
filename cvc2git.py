@@ -132,7 +132,7 @@ def get_commits(history, resume_info):
     # the first two lines must be Name: and Branch:
     if not (history[0].startswith("Name") and history[1].startswith("Branch")):
         print "Error! %s seems mal-formated. Aborting."
-        print "I haven't touched the git repo yet, so it's probably ok."
+        print "I haven't touched the git repo yet, so it's probably left fine."
         print "But if any doubt, please have a check."
         sys.exit(1)
 
@@ -284,10 +284,18 @@ def store_progress(resume_info, gitdir):
     subprocess.check_call(["git", "notes", "add", "-m", msg],
             stdout=open(os.devnull, "w"), cwd=gitdir)
 
+def read_package_list(sourcelistfile):
+    f = open(sourcelistfile)
+    sources = f.readlines()
+    f.close()
+    ret = [ln.split(":", 0)[0] for ln in sources]
+    return ret
+
 def add_options():
-    usage = "Usage: %prog --cachedir=DIR --git-dir=DIR <pkg-name> [<more-packages>]"
-    desc = ("Take a list of package names, and create a git repo according"
-            " to the data collected by get-all-pkg-log.")
+    usage = ("Usage: %prog --cachedir=DIR --git-dir=DIR\n"
+             "       %prog --cachedir=DIR --git-dir=DIR <pkg-name> [<more-packages>]")
+    desc = ("Take the data collected by get-all-pkg-log and create a git repo"
+            "If a list of packages are specified, will convert these packages only.")
 
     parser = optparse.OptionParser(usage=usage, description=desc)
     parser.add_option("--cachedir", dest="cachedir",
@@ -300,15 +308,12 @@ def add_options():
         parser.error("Need a --cachedir")
     if not options.gitdir:
         parser.error("Need a --git-dir")
-    if not args:
-        parser.error("What do you want me to convert?")
     return options, args
 
 def main():
     options, args = add_options()
 
     cachedir = os.path.abspath(options.cachedir)
-    logsdir = os.path.abspath(options.cachedir + "/logs")
     gitdir = os.path.abspath(options.gitdir)
     pkgs = args
 
@@ -323,15 +328,22 @@ def main():
         print "Reusing the git repo at %s (branch: %s; HEAD: `%s`)." % (
                 gitdir, branch, head)
 
+    if not pkgs:
+        pkgs = read_package_list(cachedir + "/sources-list")
+    if not pkgs:
+        print "Got nothing to convert. Aborting."
+        sys.exit(1)
+    print "%d packages to be converting" % len(pkgs)
+
     resume_info = get_resume_info(gitdir)
-    commits = parse_logs(pkgs, logsdir, resume_info)
+    commits = parse_logs(pkgs, cachedir + "/logs", resume_info)
     if commits:
         apply_commits(commits, gitdir)
         store_progress(resume_info, gitdir)
         head = get_git_head(gitdir)
         print "Conversion succeeded. HEAD of the git repo is now: `%s`" % head
     else:
-        print "Nothing changed."
+        print "The git repo is already up to date."
 
 if __name__ == "__main__":
     main()
