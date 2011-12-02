@@ -12,6 +12,19 @@ import shutil
 import subprocess
 import sys
 
+def check_output(*args, **kw):
+    '''
+    Like the check_output function in the subprocess module of a recent
+    Python, but backported to 2.6.
+    '''
+
+    p = subprocess.Popen(*args, stdout = subprocess.PIPE, **kw)
+    output = p.communicate()[0]
+    retcode = p.poll()
+    if retcode != 0:
+        raise subprocess.CalledProcessError(retcode, args[0])
+    return output
+
 def _is_commit_header(line):
     '''Check if a line is the header of a commit
 
@@ -240,14 +253,14 @@ def init_git_repo(gitdir):
 
 def get_git_branch(gitdir):
     # Use `git status` instead of `git branch` since it can handle initial commit
-    output = subprocess.Popen(["git", "status"], cwd=gitdir,
-            stdout=subprocess.PIPE).communicate()[0]
+    output = check_output(["git", "status"], cwd=gitdir,
+            stderr=subprocess.STDOUT)
     branch = output.splitlines()[0].split()[-1]
     return branch
 
 def is_initial_repo(gitdir):
-    status = subprocess.Popen(["git", "status"], cwd=gitdir,
-            stdout=subprocess.PIPE).communicate()[0]
+    status = check_output(["git", "status"], cwd=gitdir,
+            stderr=subprocess.STDOUT)
     status = status.splitlines()
     if len(status) > 2 and status[2] == "# Initial commit":
         return True
@@ -258,8 +271,9 @@ def get_git_head(gitdir):
     if is_initial_repo(gitdir):
         head = "Initial commit"
     else:
-        output = subprocess.Popen(["git", "log", "-1", "--format=oneline", "--abbrev-commit"],
-                stdout=subprocess.PIPE, cwd=gitdir).communicate()[0]
+        output = check_output(
+                ["git", "log", "-1", "--format=oneline", "--abbrev-commit"],
+                cwd=gitdir, stderr=subprocess.STDOUT)
         head = output.strip()
     return head
 
@@ -269,8 +283,8 @@ def get_resume_info(gitdir):
     if is_initial_repo(gitdir):
         ret = {}
     else:
-        output = subprocess.Popen(["git", "notes", "show"], cwd=gitdir,
-                stdout=subprocess.PIPE).communicate()[0]
+        output = check_output(["git", "notes", "show"], cwd=gitdir,
+                stderr=subprocess.STDOUT)
         ret = dict([x.split("=") for x in output.split()])
     return ret
 
