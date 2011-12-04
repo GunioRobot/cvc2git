@@ -324,18 +324,8 @@ def main():
     gitdir = os.path.abspath(options.gitdir)
     pkgs = args
 
-    if not os.path.exists(gitdir):
-        os.makedirs(gitdir)
-    if not os.path.exists(gitdir + "/.git"):
-        init_git_repo(gitdir)
-        print "New git repo created at %s." % gitdir
-    else:
-        branch = get_git_branch(gitdir)
-        head = get_git_head(gitdir)
-        print "Reusing the git repo at %s (branch: %s; HEAD: `%s`)." % (
-                gitdir, branch, head)
-
     if not options.norefreshcache:
+        print "Refreshing `cvc log` cache at %s" % cachedir
         prefix = os.path.dirname(sys.argv[0])
         subprocess.check_call([prefix + "/get-all-pkg-log",
             options.label, cachedir])
@@ -346,6 +336,17 @@ def main():
         print "Got nothing to convert. Aborting."
         sys.exit(1)
     print "%d packages to be converting" % len(pkgs)
+
+    if not os.path.exists(gitdir):
+        os.makedirs(gitdir)
+    if not os.path.exists(gitdir + "/.git"):
+        init_git_repo(gitdir)
+        print "New git repo created at %s." % gitdir
+    else:
+        branch = get_git_branch(gitdir)
+        head = get_git_head(gitdir)
+        print "Reusing the git repo at %s (branch: %s; HEAD: `%s`)." % (
+                gitdir, branch, head)
 
     resume_info = get_resume_info(gitdir)
     commits = parse_logs(pkgs, cachedir + "/logs", resume_info)
