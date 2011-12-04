@@ -48,7 +48,7 @@ fi
 mv -f $cachedir/sources-list.new $cachedir/sources-list
 
 if [ -z "$pkgs" ]; then
-    echo "Already up to date"
+    echo "Cache already up to date"
 else
     fetch_history $pkgs
 fi
