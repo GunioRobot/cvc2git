@@ -7,7 +7,8 @@ Usage
 
     $ cvc2git.py --label=foresight.rpath.org@fl:2-devel --cachedir=/tmp/cvc2gitcache --git-dir=/tmp/gitrepo
 
-The command can be safely rerun; it will reuse the cache and the git repo.
+The command can be safely rerun; it will reuse the cache and the git repo. See
+`cvc2git.py -h` for details.
 
 More
 ====
