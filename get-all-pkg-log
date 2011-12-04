@@ -19,6 +19,9 @@ prefix="$(dirname $0)"
 label="$1"
 cachedir="$2"
 
+#traps Ctrl-C (signal 2)
+trap "echo 'Interrupted! The cache at $cachedir may be left inconsistent!'; exit 1" 2
+
 fetch_history() {
     pkgs="$@"
     count="$#"
@@ -34,6 +37,7 @@ fetch_history() {
 }
 
 mkdir -p $cachedir/logs
+echo "Refreshing cache at $cachedir"
 conary rq --labels --install-label $label | grep :source > $cachedir/sources-list.new
 
 if [ ! -f $cachedir/sources-list ]; then

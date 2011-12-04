@@ -325,7 +325,6 @@ def main():
     pkgs = args
 
     if not options.norefreshcache:
-        print "Refreshing `cvc log` cache at %s" % cachedir
         prefix = os.path.dirname(sys.argv[0])
         subprocess.check_call([prefix + "/get-all-pkg-log",
             options.label, cachedir])
