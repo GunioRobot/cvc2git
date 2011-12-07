@@ -241,10 +241,13 @@ def init_git_repo(gitdir):
             cwd=gitdir)
 
 def get_git_branch(gitdir):
-    # Use `git status` instead of `git branch` since it can handle initial commit
-    output = check_output(["git", "status"], cwd=gitdir,
-            stderr=subprocess.STDOUT)
-    branch = output.splitlines()[0].split()[-1]
+    output = check_output(["git", "branch"], cwd=gitdir)
+    if not output:
+        branch = None
+    else:
+        branch = [b for b in output.splitlines() if b.startswith("*")]
+        assert len(branch) == 1
+        branch = branch[0].split()[-1]
     return branch
 
 def is_initial_repo(gitdir):
@@ -269,12 +272,8 @@ def get_git_head(gitdir):
 def get_resume_info(gitdir):
     '''Read the converted revisions out of a git note
     '''
-    if is_initial_repo(gitdir):
-        ret = {}
-    else:
-        output = check_output(["git", "notes", "show"], cwd=gitdir,
-                stderr=subprocess.STDOUT)
-        ret = dict([x.split("=") for x in output.split()])
+    output = check_output(["git", "notes", "show"], cwd=gitdir)
+    ret = dict([x.split("=") for x in output.split()])
     return ret
 
 def store_progress(resume_info, gitdir):
@@ -318,6 +317,10 @@ def add_options():
     return options, args
 
 def create_git_repo(gitdir):
+    '''Return True if the git repo is newly created or has no commit yet.
+    Else return False
+    '''
+    ret = True
     if not os.path.exists(gitdir):
         os.makedirs(gitdir)
     if not os.path.exists(gitdir + "/.git"):
@@ -325,9 +328,14 @@ def create_git_repo(gitdir):
         print "New git repo created at %s." % gitdir
     else:
         branch = get_git_branch(gitdir)
-        head = get_git_head(gitdir)
-        print "Reusing the git repo at %s (branch: %s; HEAD: `%s`)." % (
-                gitdir, branch, head)
+        if branch is None:
+            info = "initial commit"
+        else:
+            ret = False
+            head = get_git_head(gitdir)
+            info = "branch: %s; HEAD: `%s`" % (branch, head)
+        print "Reusing the git repo at %s (%s)" % (gitdir, info)
+    return ret
 
 def main():
     options, args = add_options()
@@ -348,9 +356,12 @@ def main():
         sys.exit(1)
     print "%d packages to be converting" % len(pkgs)
 
-    create_git_repo(gitdir)
+    is_fresh = create_git_repo(gitdir)
 
-    resume_info = get_resume_info(gitdir)
+    if is_fresh:
+        resume_info = {}
+    else:
+        resume_info = get_resume_info(gitdir)
     commits = parse_logs(pkgs, cachedir + "/logs", resume_info)
     if commits:
         apply_commits(commits, gitdir)
