@@ -37,8 +37,9 @@ fetch_history() {
 }
 
 mkdir -p $cachedir/logs
-echo "Refreshing cache at $cachedir"
+echo -n "Refreshing cache at $cachedir .."
 conary rq --labels --install-label $label | grep :source > $cachedir/sources-list.new
+echo
 
 if [ ! -f $cachedir/sources-list ]; then
     pkgs=`cat $cachedir/sources-list.new`

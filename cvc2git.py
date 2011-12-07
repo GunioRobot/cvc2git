@@ -251,8 +251,7 @@ def get_git_branch(gitdir):
     return branch
 
 def is_initial_repo(gitdir):
-    status = check_output(["git", "status"], cwd=gitdir,
-            stderr=subprocess.STDOUT)
+    status = check_output(["git", "status"], cwd=gitdir)
     status = status.splitlines()
     if len(status) > 2 and status[2] == "# Initial commit":
         return True
@@ -265,7 +264,7 @@ def get_git_head(gitdir):
     else:
         output = check_output(
                 ["git", "log", "-1", "--format=oneline", "--abbrev-commit"],
-                cwd=gitdir, stderr=subprocess.STDOUT)
+                cwd=gitdir)
         head = output.strip()
     return head
 
@@ -325,7 +324,7 @@ def create_git_repo(gitdir):
         os.makedirs(gitdir)
     if not os.path.exists(gitdir + "/.git"):
         init_git_repo(gitdir)
-        print "New git repo created at %s." % gitdir
+        print "New git repo created at %s" % gitdir
     else:
         branch = get_git_branch(gitdir)
         if branch is None:
@@ -354,7 +353,7 @@ def main():
     if not pkgs:
         print "Got nothing to convert. Aborting."
         sys.exit(1)
-    print "%d packages to be converting" % len(pkgs)
+    print "%d packages to be converted" % len(pkgs)
 
     is_fresh = create_git_repo(gitdir)
 
